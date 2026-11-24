@@ -1,0 +1,3292 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ENGLISH BATTLESHIPS: Naval Command (8x8 – 100 Questions Edition)</title>
+  <style>
+    :root {
+      --bg-deep: #06101f;
+      --bg-ocean: #0A192F;
+      --bg-panel: #0f2442;
+      --bg-panel-light: #153159;
+      --sonar-green: #00FF9D;
+      --sonar-dim: rgba(0, 255, 157, 0.16);
+      --alert-red: #FF3366;
+      --alert-dim: rgba(255, 51, 102, 0.18);
+      --gold: #FFD700;
+      --gold-dim: rgba(255, 215, 0, 0.18);
+      --purple: #B967FF;
+      --cyan: #38BDF8;
+      --text-main: #E6F1FF;
+      --text-muted: #8FA8C8;
+      --border: rgba(0, 255, 157, 0.25);
+      --shadow-glow: 0 0 20px rgba(0, 255, 157, 0.18);
+      --radius: 14px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      min-height: 100vh;
+      overflow-y: auto;
+      background: radial-gradient(circle at 50% 0%, #102a4e 0%, var(--bg-ocean) 45%, var(--bg-deep) 100%);
+      color: var(--text-main);
+      font-family: 'Segoe UI', system-ui, -apple-system, Roboto, sans-serif;
+      line-height: 1.4;
+      padding-bottom: 80px;
+    }
+
+    /* Subtle tactical grid background */
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(0, 255, 157, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 255, 157, 0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .app-container {
+      position: relative;
+      z-index: 1;
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 16px 20px 40px;
+    }
+
+    /* TOP BAR */
+    .top-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      background: rgba(10, 25, 47, 0.88);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px 18px;
+      margin-bottom: 18px;
+      box-shadow: var(--shadow-glow);
+      backdrop-filter: blur(8px);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-radar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 2px solid var(--sonar-green);
+      position: relative;
+      background: radial-gradient(circle, rgba(0,255,157,0.22) 0%, transparent 70%);
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    .brand-radar::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: conic-gradient(from 0deg, rgba(0,255,157,0.65) 0deg, transparent 70deg);
+      animation: radarSpin 3.5s linear infinite;
+    }
+
+    @keyframes radarSpin {
+      to { transform: rotate(360deg); }
+    }
+
+    .brand h1 {
+      font-size: 1.35rem;
+      letter-spacing: 1px;
+      color: var(--sonar-green);
+      text-transform: uppercase;
+      text-shadow: 0 0 12px rgba(0,255,157,0.4);
+    }
+
+    .brand span {
+      display: block;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      letter-spacing: 0.5px;
+    }
+
+    .top-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    /* BUTTONS */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      padding: 9px 14px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.16);
+      background: var(--bg-panel-light);
+      color: var(--text-main);
+      font-weight: 700;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: transform 0.12s ease, background 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+      user-select: none;
+    }
+
+    .btn:hover:not(:disabled) {
+      transform: translateY(-1px);
+      border-color: var(--sonar-green);
+      box-shadow: 0 0 14px rgba(0,255,157,0.25);
+    }
+
+    .btn:active:not(:disabled) {
+      transform: translateY(0);
+    }
+
+    .btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #00c97a, #00FF9D);
+      color: #04131d;
+      border: none;
+      box-shadow: 0 0 18px rgba(0,255,157,0.35);
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background: linear-gradient(135deg, #00e68c, #42ffb6);
+      box-shadow: 0 0 24px rgba(0,255,157,0.55);
+    }
+
+    .btn-danger {
+      background: linear-gradient(135deg, #d91c4b, #FF3366);
+      color: #fff;
+      border: none;
+      box-shadow: 0 0 16px rgba(255, 51, 102, 0.35);
+    }
+
+    .btn-danger:hover:not(:disabled) {
+      background: linear-gradient(135deg, #f22256, #ff547f);
+      border-color: transparent;
+      box-shadow: 0 0 22px rgba(255, 51, 102, 0.6);
+    }
+
+    .btn-gold {
+      background: linear-gradient(135deg, #e0a800, #FFD700);
+      color: #1a1200;
+      border: none;
+    }
+
+    .btn-ghost {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.14);
+      color: var(--text-muted);
+    }
+
+    .btn-ghost.active {
+      background: rgba(255, 215, 0, 0.18);
+      border-color: var(--gold);
+      color: var(--gold);
+    }
+
+    .btn-sm {
+      padding: 5px 10px;
+      font-size: 0.8rem;
+      border-radius: 7px;
+    }
+
+    .btn-lg {
+      padding: 14px 26px;
+      font-size: 1.15rem;
+      border-radius: 12px;
+    }
+
+    /* CARDS / PANELS */
+    .panel {
+      background: rgba(15, 36, 66, 0.9);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    /* ==================== PHASE 1: LOBBY ==================== */
+    .lobby-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+
+    @media (max-width: 900px) {
+      .lobby-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .lobby-header {
+      text-align: center;
+      margin-bottom: 22px;
+    }
+
+    .lobby-header h2 {
+      font-size: 2rem;
+      color: var(--sonar-green);
+      letter-spacing: 1px;
+      margin-bottom: 6px;
+    }
+
+    .lobby-header p {
+      color: var(--text-muted);
+      font-size: 1.02rem;
+    }
+
+    .fleet-setup-card h3 {
+      font-size: 1.2rem;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: var(--gold);
+    }
+
+    .form-group {
+      margin-bottom: 14px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 5px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    input[type="text"], textarea, select {
+      width: 100%;
+      padding: 10px 13px;
+      border-radius: 9px;
+      border: 1px solid rgba(0, 255, 157, 0.25);
+      background: rgba(6, 16, 31, 0.85);
+      color: var(--text-main);
+      font-size: 1rem;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    input[type="text"]:focus, textarea:focus, select:focus {
+      border-color: var(--sonar-green);
+      box-shadow: 0 0 10px rgba(0, 255, 157, 0.25);
+    }
+
+    .roster-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .roster-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .roster-badge {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--sonar-dim);
+      border: 1px solid var(--sonar-green);
+      color: var(--sonar-green);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 0.85rem;
+      flex-shrink: 0;
+    }
+
+    .lobby-map-options {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 22px;
+    }
+
+    .checkbox-label {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      font-size: 0.98rem;
+      background: rgba(6, 16, 31, 0.65);
+      padding: 10px 14px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.12);
+    }
+
+    .checkbox-label input {
+      width: 20px;
+      height: 20px;
+      accent-color: var(--sonar-green);
+      cursor: pointer;
+    }
+
+    .lobby-start-wrap {
+      text-align: center;
+      margin-top: 10px;
+    }
+
+    .map-status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: var(--sonar-dim);
+      border: 1px solid var(--sonar-green);
+      color: var(--sonar-green);
+      font-weight: 700;
+      font-size: 0.9rem;
+    }
+
+    /* ==================== PHASE 2: MAIN GAME ==================== */
+    .teams-bar {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 14px;
+    }
+
+    @media (max-width: 820px) {
+      .teams-bar {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .team-card {
+      position: relative;
+      background: rgba(15, 36, 66, 0.92);
+      border: 2px solid rgba(255,255,255,0.12);
+      border-radius: var(--radius);
+      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      transition: all 0.25s ease;
+    }
+
+    .team-card.active-turn {
+      border-color: var(--sonar-green);
+      background: linear-gradient(135deg, rgba(0, 255, 157, 0.12), rgba(15, 36, 66, 0.96));
+      box-shadow: 0 0 26px rgba(0, 255, 157, 0.28);
+    }
+
+    .team-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .team-title-row {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 6px;
+    }
+
+    .team-name {
+      font-size: 1.45rem;
+      font-weight: 800;
+      color: #fff;
+    }
+
+    .turn-badge {
+      background: var(--sonar-green);
+      color: #03131b;
+      font-size: 0.78rem;
+      font-weight: 900;
+      padding: 4px 10px;
+      border-radius: 999px;
+      letter-spacing: 0.6px;
+      animation: pulseGlow 1.5s infinite;
+    }
+
+    @keyframes pulseGlow {
+      0%, 100% { box-shadow: 0 0 8px rgba(0,255,157,0.6); }
+      50% { box-shadow: 0 0 18px rgba(0,255,157,1); }
+    }
+
+    .captain-box {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(6, 16, 31, 0.72);
+      border: 1px solid rgba(255, 215, 0, 0.35);
+      padding: 5px 12px;
+      border-radius: 8px;
+      font-size: 0.98rem;
+      margin-bottom: 6px;
+    }
+
+    .captain-box strong {
+      color: var(--gold);
+      font-size: 1.05rem;
+    }
+
+    .roster-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+    }
+
+    .roster-pill {
+      font-size: 0.76rem;
+      padding: 2px 8px;
+      border-radius: 6px;
+      background: rgba(255,255,255,0.06);
+      color: var(--text-muted);
+    }
+
+    .roster-pill.current {
+      background: rgba(255, 215, 0, 0.22);
+      color: var(--gold);
+      border: 1px solid rgba(255, 215, 0, 0.5);
+      font-weight: 700;
+    }
+
+    .team-score-block {
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    .score-value {
+      font-size: 2.4rem;
+      font-weight: 900;
+      line-height: 1;
+      color: var(--sonar-green);
+      text-shadow: 0 0 12px rgba(0,255,157,0.3);
+      margin-bottom: 8px;
+    }
+
+    .score-value.negative {
+      color: var(--alert-red);
+      text-shadow: 0 0 12px rgba(255,51,102,0.4);
+    }
+
+    .score-adjust {
+      display: flex;
+      gap: 6px;
+      justify-content: flex-end;
+    }
+
+    /* CONVERSATION BAR */
+    .speak-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      background: linear-gradient(90deg, rgba(0,255,157,0.12), rgba(56,189,248,0.12));
+      border: 1px solid rgba(0,255,157,0.35);
+      border-radius: 12px;
+      padding: 10px 18px;
+      margin-bottom: 18px;
+    }
+
+    .speak-prompt {
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: 0.3px;
+    }
+
+    .speak-prompt .coord-highlight {
+      color: var(--gold);
+      background: rgba(255,215,0,0.15);
+      padding: 2px 9px;
+      border-radius: 6px;
+      border: 1px solid rgba(255,215,0,0.4);
+    }
+
+    .last-event-banner {
+      font-size: 0.95rem;
+      color: var(--cyan);
+      font-weight: 600;
+    }
+
+    /* MAIN BATTLEFIELD LAYOUT */
+    .battle-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 340px;
+      gap: 20px;
+      align-items: start;
+    }
+
+    @media (max-width: 1080px) {
+      .battle-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* 8x8 RADAR BOARD */
+    .board-wrapper {
+      background: rgba(8, 22, 42, 0.95);
+      border: 2px solid var(--border);
+      border-radius: 16px;
+      padding: 16px;
+      box-shadow: 0 0 35px rgba(0, 255, 157, 0.1);
+    }
+
+    .board-grid {
+      display: grid;
+      grid-template-columns: 36px repeat(8, minmax(0, 1fr));
+      gap: 6px;
+      max-width: 720px;
+      margin: 0 auto;
+    }
+
+    .axis-label {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      font-size: 1.15rem;
+      color: var(--sonar-green);
+      text-shadow: 0 0 8px rgba(0,255,157,0.4);
+      user-select: none;
+    }
+
+    .cell {
+      aspect-ratio: 1 / 1;
+      border-radius: 10px;
+      border: 1px solid rgba(0, 255, 157, 0.28);
+      background: radial-gradient(circle at 30% 30%, #12335e, #091d38);
+      color: var(--text-muted);
+      font-weight: 900;
+      font-size: 1.55rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      position: relative;
+      transition: transform 0.14s ease, border-color 0.18s ease, box-shadow 0.18s ease, background 0.2s ease;
+      user-select: none;
+      overflow: hidden;
+    }
+
+    .cell .cell-coord {
+      position: absolute;
+      top: 4px;
+      left: 6px;
+      font-size: 0.68rem;
+      font-weight: 700;
+      opacity: 0.45;
+      color: var(--sonar-green);
+    }
+
+    .cell:hover:not(.opened) {
+      transform: scale(1.04);
+      border-color: var(--sonar-green);
+      box-shadow: 0 0 16px rgba(0,255,157,0.45);
+      background: radial-gradient(circle at 30% 30%, #19477f, #0d2a4d);
+      z-index: 2;
+    }
+
+    .cell.locked {
+      border: 2px solid var(--gold);
+      box-shadow: 0 0 20px rgba(255, 215, 0, 0.75);
+      animation: targetPulse 0.9s infinite;
+    }
+
+    @keyframes targetPulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.04); }
+    }
+
+    .cell.state-miss {
+      background: linear-gradient(135deg, #0b2647, #071930);
+      border-color: rgba(56, 189, 248, 0.4);
+      color: var(--cyan);
+      cursor: default;
+    }
+
+    .cell.state-hit {
+      background: linear-gradient(135deg, #591124, #9c1738);
+      border-color: var(--alert-red);
+      color: #fff;
+      box-shadow: inset 0 0 18px rgba(255, 51, 102, 0.8), 0 0 14px rgba(255, 51, 102, 0.5);
+      cursor: default;
+      animation: hitBoom 0.55s ease-out;
+    }
+
+    @keyframes hitBoom {
+      0% { transform: scale(1.28); filter: brightness(2); }
+      50% { transform: scale(0.92); }
+      100% { transform: scale(1); filter: brightness(1); }
+    }
+
+    .cell.state-sunk {
+      background: linear-gradient(135deg, #2b0812, #5e0c21);
+      border: 2px solid #ff6b8b;
+      color: #ffd1dc;
+      cursor: default;
+    }
+
+    .sunk-symbol {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      border: 3px solid var(--alert-red);
+      font-size: 1.3rem;
+      line-height: 1;
+      background: rgba(255, 51, 102, 0.25);
+    }
+
+    .cell.state-special {
+      background: linear-gradient(135deg, #3c1e66, #66279c);
+      border: 2px solid var(--gold);
+      color: var(--gold);
+      box-shadow: 0 0 16px rgba(185, 103, 255, 0.5);
+      cursor: default;
+      animation: specialPop 0.5s ease-out;
+    }
+
+    @keyframes specialPop {
+      0% { transform: scale(0.7) rotate(-10deg); }
+      60% { transform: scale(1.15) rotate(6deg); }
+      100% { transform: scale(1) rotate(0); }
+    }
+
+    .cell.radar-flash {
+      animation: radarGoldFlash 0.6s ease-in-out infinite !important;
+      border: 3px solid var(--gold) !important;
+      z-index: 4;
+    }
+
+    @keyframes radarGoldFlash {
+      0%, 100% {
+        box-shadow: 0 0 24px rgba(255, 215, 0, 1), inset 0 0 20px rgba(255, 215, 0, 0.85);
+        background: rgba(255, 215, 0, 0.45);
+      }
+      50% {
+        box-shadow: 0 0 8px rgba(255, 215, 0, 0.3);
+        background: #12335e;
+      }
+    }
+
+    /* Teacher secret map overlay */
+    .teacher-hint {
+      position: absolute;
+      bottom: 3px;
+      right: 4px;
+      font-size: 0.72rem;
+      font-weight: 800;
+      padding: 1px 4px;
+      border-radius: 4px;
+      pointer-events: none;
+      opacity: 0.92;
+    }
+
+    .teacher-hint.ship-hint {
+      background: rgba(255, 51, 102, 0.75);
+      color: #fff;
+    }
+
+    .teacher-hint.special-hint {
+      background: rgba(255, 215, 0, 0.85);
+      color: #140e00;
+    }
+
+    /* All-Out War target badges */
+    .aow-badge {
+      position: absolute;
+      inset: 4px;
+      border-radius: 7px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.95rem;
+      font-weight: 900;
+      pointer-events: none;
+    }
+    .aow-badge.team-a {
+      background: rgba(0, 255, 157, 0.25);
+      border: 2px solid var(--sonar-green);
+      color: var(--sonar-green);
+    }
+    .aow-badge.team-b {
+      background: rgba(255, 51, 102, 0.28);
+      border: 2px solid var(--alert-red);
+      color: #ff99b2;
+    }
+    .aow-badge.team-both {
+      background: rgba(255, 215, 0, 0.3);
+      border: 2px solid var(--gold);
+      color: var(--gold);
+    }
+
+    /* LEGEND */
+    .legend-row {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 14px;
+      margin-top: 14px;
+      padding-top: 12px;
+      border-top: 1px solid rgba(255,255,255,0.1);
+      font-size: 0.86rem;
+      color: var(--text-muted);
+    }
+
+    .legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .legend-swatch {
+      width: 22px;
+      height: 22px;
+      border-radius: 5px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      font-size: 0.82rem;
+    }
+
+    /* SIDEBAR */
+    .sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .sidebar h3 {
+      font-size: 1.05rem;
+      color: var(--sonar-green);
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .ship-status-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .ship-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 11px;
+      border-radius: 9px;
+      background: rgba(6, 16, 31, 0.65);
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .ship-row.all-sunk {
+      opacity: 0.45;
+      text-decoration: line-through;
+    }
+
+    .ship-meta {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .ship-meta strong {
+      font-size: 0.92rem;
+      color: #fff;
+    }
+
+    .ship-meta small {
+      font-size: 0.76rem;
+      color: var(--gold);
+    }
+
+    .ship-blocks {
+      display: flex;
+      gap: 3px;
+    }
+
+    .ship-block {
+      width: 12px;
+      height: 12px;
+      border-radius: 3px;
+      background: var(--sonar-green);
+    }
+
+    .ship-count-badge {
+      font-size: 1.05rem;
+      font-weight: 900;
+      color: var(--sonar-green);
+      min-width: 38px;
+      text-align: right;
+    }
+
+    .deck-stats {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .deck-stat-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 11px;
+      border-radius: 9px;
+      background: rgba(6, 16, 31, 0.65);
+      font-size: 0.9rem;
+    }
+
+    .deck-stat-row strong {
+      color: var(--gold);
+      font-size: 0.98rem;
+    }
+
+    /* ALL-OUT WAR BANNER */
+    .aow-banner {
+      background: linear-gradient(135deg, rgba(255,51,102,0.22), rgba(15,36,66,0.96));
+      border: 2px solid var(--alert-red);
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      margin-bottom: 18px;
+      box-shadow: 0 0 28px rgba(255,51,102,0.3);
+    }
+
+    .aow-banner h2 {
+      color: var(--alert-red);
+      font-size: 1.45rem;
+      margin-bottom: 6px;
+    }
+
+    .aow-controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .aow-timer-big {
+      font-size: 2.2rem;
+      font-weight: 900;
+      color: var(--gold);
+      background: rgba(6,16,31,0.8);
+      padding: 4px 16px;
+      border-radius: 10px;
+      border: 1px solid var(--gold);
+    }
+
+    /* MODALS */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(3, 9, 20, 0.84);
+      backdrop-filter: blur(6px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      z-index: 1000;
+      overflow-y: auto;
+    }
+
+    .modal-card {
+      width: 100%;
+      max-width: 760px;
+      max-height: 92vh;
+      overflow-y: auto;
+      background: linear-gradient(180deg, #102747 0%, #09182e 100%);
+      border: 2px solid var(--sonar-green);
+      border-radius: 18px;
+      padding: 24px 26px;
+      box-shadow: 0 0 45px rgba(0, 255, 157, 0.25);
+      position: relative;
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid rgba(255,255,255,0.12);
+    }
+
+    .modal-header h2 {
+      font-size: 1.45rem;
+      color: var(--sonar-green);
+    }
+
+    /* WEAPON SELECTOR */
+    .weapon-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin-top: 14px;
+    }
+
+    @media (max-width: 700px) {
+      .weapon-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .weapon-card {
+      background: rgba(6, 16, 31, 0.85);
+      border: 2px solid rgba(255,255,255,0.14);
+      border-radius: 14px;
+      padding: 18px 14px;
+      text-align: center;
+      cursor: pointer;
+      transition: transform 0.15s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .weapon-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--sonar-green);
+      box-shadow: 0 0 22px rgba(0,255,157,0.3);
+    }
+
+    .weapon-card.heavy:hover {
+      border-color: var(--alert-red);
+      box-shadow: 0 0 22px rgba(255,51,102,0.4);
+    }
+
+    .weapon-card.rapid:hover {
+      border-color: var(--gold);
+      box-shadow: 0 0 22px rgba(255,215,0,0.35);
+    }
+
+    .weapon-icon {
+      font-size: 2.6rem;
+    }
+
+    .weapon-name {
+      font-size: 1.1rem;
+      font-weight: 900;
+      color: #fff;
+    }
+
+    .weapon-desc {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .weapon-meta {
+      margin-top: auto;
+      padding-top: 8px;
+      border-top: 1px solid rgba(255,255,255,0.1);
+      font-size: 0.86rem;
+      font-weight: 700;
+      color: var(--sonar-green);
+    }
+
+    /* QUESTION MODAL */
+    .timer-bar-wrap {
+      width: 100%;
+      height: 14px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 999px;
+      overflow: hidden;
+      margin-bottom: 12px;
+    }
+
+    .timer-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--sonar-green), var(--cyan));
+      width: 100%;
+      transition: width 0.25s linear;
+    }
+
+    .timer-bar-fill.urgent {
+      background: linear-gradient(90deg, var(--alert-red), #ff8000);
+    }
+
+    .timer-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+
+    .timer-digits {
+      font-size: 2.3rem;
+      font-weight: 900;
+      color: var(--sonar-green);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .timer-digits.urgent {
+      color: var(--alert-red);
+      animation: pulseUrgent 0.6s infinite;
+    }
+
+    @keyframes pulseUrgent {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+    }
+
+    .question-box {
+      background: rgba(6, 16, 31, 0.9);
+      border: 1px solid rgba(0, 255, 157, 0.3);
+      border-radius: 14px;
+      padding: 24px 20px;
+      margin-bottom: 16px;
+      text-align: center;
+    }
+
+    .question-cat-tag {
+      display: inline-block;
+      font-size: 0.82rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      padding: 4px 12px;
+      border-radius: 999px;
+      background: var(--sonar-dim);
+      color: var(--sonar-green);
+      margin-bottom: 12px;
+    }
+
+    .question-text {
+      font-size: 1.75rem;
+      font-weight: 800;
+      color: #fff;
+      line-height: 1.35;
+    }
+
+    .answer-box {
+      margin-top: 16px;
+      padding: 12px 16px;
+      border-radius: 10px;
+      background: rgba(255, 215, 0, 0.14);
+      border: 1px solid var(--gold);
+      color: var(--gold);
+      font-size: 1.25rem;
+      font-weight: 800;
+    }
+
+    .question-tools {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+
+    .fire-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    @media (max-width: 600px) {
+      .fire-actions {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* IMPACT / EVENT TOAST OVERLAY */
+    .impact-modal-card {
+      max-width: 560px;
+      text-align: center;
+      padding: 30px 24px;
+    }
+
+    .impact-icon {
+      font-size: 4.2rem;
+      margin-bottom: 10px;
+    }
+
+    .impact-title {
+      font-size: 2rem;
+      font-weight: 900;
+      margin-bottom: 8px;
+    }
+
+    .impact-desc {
+      font-size: 1.15rem;
+      color: var(--text-main);
+      margin-bottom: 18px;
+    }
+
+    /* QUESTION EDITOR */
+    .editor-list {
+      max-height: 46vh;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin: 14px 0;
+      padding-right: 4px;
+    }
+
+    .editor-item {
+      background: rgba(6, 16, 31, 0.8);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 10px;
+      padding: 10px 12px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .editor-item.used-q {
+      border-left: 4px solid var(--gold);
+    }
+
+    .editor-add-form {
+      display: grid;
+      grid-template-columns: 150px 1fr 1fr auto;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    @media (max-width: 780px) {
+      .editor-add-form {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* WINNING SCREEN */
+    .win-card {
+      max-width: 820px;
+      text-align: center;
+      border-color: var(--gold);
+      box-shadow: 0 0 60px rgba(255, 215, 0, 0.35);
+    }
+
+    .win-trophy {
+      font-size: 4.8rem;
+      margin-bottom: 8px;
+    }
+
+    .win-title {
+      font-size: 2.4rem;
+      font-weight: 900;
+      color: var(--gold);
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .win-stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+      margin: 20px 0;
+      text-align: left;
+    }
+
+    @media (max-width: 600px) {
+      .win-stats-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .win-stat-box {
+      background: rgba(6, 16, 31, 0.82);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 12px;
+      padding: 14px;
+    }
+
+    /* TOAST NOTIFICATION */
+    .toast {
+      position: fixed;
+      bottom: 22px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(10, 25, 47, 0.96);
+      border: 2px solid var(--gold);
+      color: var(--gold);
+      padding: 12px 22px;
+      border-radius: 999px;
+      font-weight: 800;
+      font-size: 0.98rem;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+      z-index: 2000;
+      transition: opacity 0.25s ease;
+    }
+
+    #confettiCanvas {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 1500;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="confettiCanvas"></canvas>
+
+  <div class="app-container">
+    <!-- TOP BAR -->
+    <header class="top-bar">
+      <div class="brand">
+        <div class="brand-radar"></div>
+        <div>
+          <h1>ENGLISH BATTLESHIPS: Naval Command</h1>
+          <span>Námořní bitva 8×8 • 100 Questions Edition • Interaktivní tabule</span>
+        </div>
+      </div>
+      <div class="top-actions">
+        <button class="btn btn-ghost" id="btnSound" title="Zapnout/Vypnout zvuky">🔊 Zvuk ON</button>
+        <button class="btn btn-ghost" id="btnEditor">📝 Editor otázek</button>
+        <button class="btn btn-ghost hidden" id="btnTeacherMap">👁️ Tajná mapa učitele</button>
+        <button class="btn btn-danger hidden" id="btnAllOutWar">🚨 FINÁLE: ALL-OUT WAR</button>
+        <button class="btn btn-ghost" id="btnResetBattle">♻️ Resetovat bitvu</button>
+        <button class="btn btn-ghost" id="btnLobby">🔄 Nová hra / Lobby</button>
+      </div>
+    </header>
+
+    <!-- ==================== PHASE 1: LOBBY ==================== -->
+    <section id="phaseLobby">
+      <div class="lobby-header">
+        <h2>⚓ NASTAVENÍ VÁLEČNÝCH FLOTIL</h2>
+        <p>Nastavte názvy flotil, zadejte jména hráčů pro automatickou rotaci kapitánů a vygenerujte tajný oceán 8×8.</p>
+      </div>
+
+      <div class="lobby-grid">
+        <!-- TEAM A SETUP -->
+        <div class="panel fleet-setup-card">
+          <h3>
+            <span>Flotila A (3 hráči / 2–5)</span>
+            <span style="font-size:0.85rem;color:var(--sonar-green);">Start: 0 b.</span>
+          </h3>
+          <div class="form-group">
+            <label for="inputTeamAName">Název Flotily A</label>
+            <input type="text" id="inputTeamAName" value="⚓ The Kraken" />
+          </div>
+          <div class="form-group">
+            <label>Posádka & Pořadí rotace kapitánů (1 → 2 → 3…)</label>
+            <div class="roster-list" id="rosterListA"></div>
+            <div style="display:flex;gap:8px;">
+              <button class="btn btn-sm" id="btnAddPlayerA">+ Přidat hráče</button>
+              <button class="btn btn-sm btn-ghost" id="btnRemPlayerA">− Odebrat hráče</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- TEAM B SETUP -->
+        <div class="panel fleet-setup-card">
+          <h3>
+            <span>Flotila B (4 hráči / 2–5)</span>
+            <span style="font-size:0.85rem;color:var(--sonar-green);">Start: 0 b.</span>
+          </h3>
+          <div class="form-group">
+            <label for="inputTeamBName">Název Flotily B</label>
+            <input type="text" id="inputTeamBName" value="🚢 Iron Fleet" />
+          </div>
+          <div class="form-group">
+            <label>Posádka & Pořadí rotace kapitánů (1 → 2 → 3 → 4…)</label>
+            <div class="roster-list" id="rosterListB"></div>
+            <div style="display:flex;gap:8px;">
+              <button class="btn btn-sm" id="btnAddPlayerB">+ Přidat hráče</button>
+              <button class="btn btn-sm btn-ghost" id="btnRemPlayerB">− Odebrat hráče</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MAP GENERATION PANEL -->
+      <div class="panel">
+        <div class="lobby-map-options">
+          <div>
+            <button class="btn btn-gold" id="btnGenOcean">🎲 Náhodně vygenerovat oceán (11 lodí + 7 událostí)</button>
+            <span class="map-status-pill" id="lobbyMapStatus" style="margin-left:10px;">✅ Oceán připraven (lodě se nedotýkají ani rohem)</span>
+          </div>
+          <label class="checkbox-label">
+            <input type="checkbox" id="chkFixedSpecials" checked />
+            <span>Použít přesné souřadnice speciálních políček (A4, C2, E6, G7, B7, F2, C8)</span>
+          </label>
+        </div>
+
+        <div class="lobby-start-wrap">
+          <button class="btn btn-primary btn-lg" id="btnStartBattle">🌊 SPUSTIT NÁMOŘNÍ BITVU</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== PHASE 2: MAIN GAME ==================== -->
+    <section id="phaseBattle" class="hidden">
+      <!-- ALL-OUT WAR PANEL (VISIBLE ONLY DURING FINALE) -->
+      <div id="aowPanel" class="aow-banner hidden">
+        <h2>🚨 FINÁLE: ALL-OUT WAR – POSLEDNÍ SALVA!</h2>
+        <p id="aowInstruction">Obě flotily mají 30 sekund na tajný výběr 3 souřadnic na mapě.</p>
+        <div class="aow-controls" id="aowControls"></div>
+      </div>
+
+      <!-- TOP FLEET SCORE CARDS -->
+      <div class="teams-bar">
+        <div class="team-card" id="cardTeamA">
+          <div class="team-info">
+            <div class="team-title-row">
+              <span class="team-name" id="nameTeamA">⚓ The Kraken</span>
+              <span class="turn-badge hidden" id="badgeTurnA">🎯 NA TAHU</span>
+            </div>
+            <div class="captain-box">
+              👨‍✈️ Kapitán tahu: <strong id="captainTeamA">—</strong>
+            </div>
+            <div class="roster-pills" id="pillsTeamA"></div>
+          </div>
+          <div class="team-score-block">
+            <div class="score-value" id="scoreTeamA">0</div>
+            <div class="score-adjust">
+              <button class="btn btn-sm" onclick="adjustScore(0, 50)">+50</button>
+              <button class="btn btn-sm btn-ghost" onclick="adjustScore(0, -50)">-50</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="team-card" id="cardTeamB">
+          <div class="team-info">
+            <div class="team-title-row">
+              <span class="team-name" id="nameTeamB">🚢 Iron Fleet</span>
+              <span class="turn-badge hidden" id="badgeTurnB">🎯 NA TAHU</span>
+            </div>
+            <div class="captain-box">
+              👨‍✈️ Kapitán tahu: <strong id="captainTeamB">—</strong>
+            </div>
+            <div class="roster-pills" id="pillsTeamB"></div>
+          </div>
+          <div class="team-score-block">
+            <div class="score-value" id="scoreTeamB">0</div>
+            <div class="score-adjust">
+              <button class="btn btn-sm" onclick="adjustScore(1, 50)">+50</button>
+              <button class="btn btn-sm btn-ghost" onclick="adjustScore(1, -50)">-50</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SPEAKING PROMPT BAR -->
+      <div class="speak-bar">
+        <div class="speak-prompt">
+          🗣️ <span id="speakCaptainLabel">Kapitán</span> říká: „We fire at <span class="coord-highlight" id="speakCoord">[B4]</span>!“
+        </div>
+        <div class="last-event-banner" id="lastEventBanner">Klikněte na políčko 8×8 pro zaměření cíle.</div>
+      </div>
+
+      <!-- BATTLEFIELD + SIDEBAR -->
+      <div class="battle-layout">
+        <!-- 8x8 RADAR BOARD -->
+        <div class="board-wrapper">
+          <div class="board-grid" id="boardGrid"></div>
+          <div class="legend-row">
+            <span class="legend-item"><span class="legend-swatch" style="background:#0d2a4d;border:1px solid #00FF9D;"></span> Neotevřená voda</span>
+            <span class="legend-item"><span class="legend-swatch" style="background:#081e38;color:#38BDF8;border:1px solid #38BDF8;">~</span> MISS (voda)</span>
+            <span class="legend-item"><span class="legend-swatch" style="background:#8a1533;color:#fff;">X</span> HIT (zásah)</span>
+            <span class="legend-item"><span class="legend-swatch" style="background:#4a0b1b;color:#ffd1dc;border:2px solid #FF3366;border-radius:50%;">#</span> SUNK (potopeno)</span>
+            <span class="legend-item"><span class="legend-swatch" style="background:#57238a;color:#FFD700;border:1px solid #FFD700;">★</span> POWER-UP / TRAP</span>
+          </div>
+        </div>
+
+        <!-- SIDEBAR: ENEMY FLEET & QUESTION DECKS -->
+        <aside class="sidebar">
+          <div class="panel">
+            <h3>
+              <span>🚢 Zbývající flotila</span>
+              <span id="totalShipsLeft" style="color:var(--gold);">11 / 11</span>
+            </h3>
+            <div class="ship-status-list" id="shipStatusList"></div>
+          </div>
+
+          <div class="panel">
+            <h3>📚 Zásobník otázek</h3>
+            <div class="deck-stats" id="deckStatsList"></div>
+            <div style="margin-top:10px;font-size:0.8rem;color:var(--text-muted);">
+              Otázky se vybírají náhodně bez opakování (Fisher-Yates). Po vyčerpání se balíček sám promíchá.
+            </div>
+          </div>
+
+          <div class="panel">
+            <h3>⚡ Speciální události (7)</h3>
+            <div style="font-size:0.83rem;color:var(--text-muted);display:flex;flex-direction:column;gap:5px;">
+              <div>📡 <strong>Radar Scan</strong>: 6 s odhalí 1 pole lodi</div>
+              <div>🚀 <strong>Double Torpedo</strong>: Bonusový tah navíc</div>
+              <div>🏴‍☠️ <strong>Pirate Raid</strong>: Ukradne 200 b. soupeři</div>
+              <div>💰 <strong>Treasure Chest</strong>: +250 b. zdarma</div>
+              <div>💣 <strong>Sea Mine (2×)</strong>: −150 b. vlastnímu týmu</div>
+              <div>🌀 <strong>Bermuda Triangle</strong>: Výměna skóre!</div>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </section>
+  </div>
+
+  <!-- ==================== MODAL: WEAPON SELECTION ==================== -->
+  <div class="modal-backdrop hidden" id="modalWeapon">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2>🎯 TARGET LOCKED: <span id="weaponTargetCoord" style="color:var(--gold);">B4</span></h2>
+        <button class="btn btn-sm btn-ghost" id="btnCancelWeapon">✕ Zrušit zaměření</button>
+      </div>
+      <p style="font-size:1.05rem;color:var(--text-muted);">
+        <strong id="weaponTeamLabel" style="color:#fff;">Tým</strong> (Kapitán: <strong id="weaponCaptainLabel" style="color:var(--gold);">—</strong>) – vyberte zbraň:
+      </p>
+      <div class="weapon-grid">
+        <div class="weapon-card" onclick="selectWeapon('standard')">
+          <div class="weapon-icon">🔫</div>
+          <div class="weapon-name">STANDARD SHOT</div>
+          <div class="weapon-desc">Oprava 1 gramatické chyby<br />Čas: 20 s • Zásah: +100 b.</div>
+          <div class="weapon-meta" id="weaponCountStandard">Zbývá: 40 / 40</div>
+        </div>
+        <div class="weapon-card rapid" onclick="selectWeapon('rapid')">
+          <div class="weapon-icon">⚡</div>
+          <div class="weapon-name">RAPID FIRE</div>
+          <div class="weapon-desc">Slovní zásoba / Nepravidelná slovesa<br />Čas: 15 s • Zásah: +100 b.</div>
+          <div class="weapon-meta" id="weaponCountRapid">Zbývá: 35 / 35</div>
+        </div>
+        <div class="weapon-card heavy" onclick="selectWeapon('heavy')">
+          <div class="weapon-icon">💣</div>
+          <div class="weapon-name">HEAVY CANNON</div>
+          <div class="weapon-desc">Překlad věty / Těžká gramatika<br />Čas: 20 s • Zásah: +200 b. (2×!)</div>
+          <div class="weapon-meta" id="weaponCountHeavy">Zbývá: 25 / 25</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL: QUESTION & FIRING ==================== -->
+  <div class="modal-backdrop hidden" id="modalQuestion">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2 id="qModalTitle">🔫 STANDARD SHOT → B4</h2>
+        <span id="qModalTeam" style="font-weight:800;color:var(--gold);"></span>
+      </div>
+
+      <div class="timer-row">
+        <span style="font-weight:700;color:var(--text-muted);">ODPOČET DO VÝSTŘELU:</span>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <button class="btn btn-sm btn-ghost" id="btnToggleTimer">⏸️ Pauza</button>
+          <span class="timer-digits" id="qTimerDigits">20 s</span>
+        </div>
+      </div>
+      <div class="timer-bar-wrap">
+        <div class="timer-bar-fill" id="qTimerBar"></div>
+      </div>
+
+      <div class="question-box">
+        <div class="question-cat-tag" id="qCatTag">STANDARD SHOT</div>
+        <div class="question-text" id="qText">Otázka...</div>
+        <div class="answer-box hidden" id="qAnswerBox">Řešení</div>
+      </div>
+
+      <div class="question-tools">
+        <button class="btn btn-ghost" id="btnRevealAnswer">👁️ Ukázat řešení učiteli</button>
+        <button class="btn btn-ghost" id="btnSwapQuestion">🔀 Jiná náhodná otázka</button>
+      </div>
+
+      <div class="fire-actions">
+        <button class="btn btn-primary btn-lg" id="btnFireCorrect">✅ SPRÁVNĚ – PAL! (FIRE!)</button>
+        <button class="btn btn-danger btn-lg" id="btnFireWrong">❌ ŠPATNĚ / ČAS – MISFIRE!</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL: IMPACT / EVENT ==================== -->
+  <div class="modal-backdrop hidden" id="modalImpact">
+    <div class="modal-card impact-modal-card">
+      <div class="impact-icon" id="impactIcon">💥</div>
+      <div class="impact-title" id="impactTitle">ZÁSAH!</div>
+      <div class="impact-desc" id="impactDesc">Popis výsledku</div>
+      <button class="btn btn-primary btn-lg" id="btnCloseImpact">Pokračovat v bitvě ▶</button>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL: QUESTION EDITOR ==================== -->
+  <div class="modal-backdrop hidden" id="modalEditor">
+    <div class="modal-card" style="max-width:920px;">
+      <div class="modal-header">
+        <h2>📝 Editor databáze otázek (100+)</h2>
+        <button class="btn btn-sm btn-ghost" id="btnCloseEditor">✕ Zavřít</button>
+      </div>
+
+      <div class="editor-add-form">
+        <select id="edAddCat">
+          <option value="standard">🔫 Standard Shot</option>
+          <option value="rapid">⚡ Rapid Fire</option>
+          <option value="heavy">💣 Heavy Cannon</option>
+        </select>
+        <input type="text" id="edAddQ" placeholder="Text nové otázky..." />
+        <input type="text" id="edAddA" placeholder="Správná odpověď..." />
+        <button class="btn btn-primary" id="btnEdAdd">+ Přidat</button>
+      </div>
+
+      <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;margin-bottom:8px;">
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <button class="btn btn-sm" onclick="setEditorFilter('all')">Vše</button>
+          <button class="btn btn-sm" onclick="setEditorFilter('standard')">🔫 Standard</button>
+          <button class="btn btn-sm" onclick="setEditorFilter('rapid')">⚡ Rapid</button>
+          <button class="btn btn-sm" onclick="setEditorFilter('heavy')">💣 Heavy</button>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn btn-sm btn-gold" id="btnResetUsedQuestions">🔀 Obnovit použité otázky</button>
+          <button class="btn btn-sm btn-danger" id="btnRestoreDefaults">♻️ Obnovit výchozích 100</button>
+        </div>
+      </div>
+
+      <div class="editor-list" id="editorList"></div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL: WINNING SCREEN ==================== -->
+  <div class="modal-backdrop hidden" id="modalWin">
+    <div class="modal-card win-card">
+      <div class="win-trophy">🏆</div>
+      <div class="win-title" id="winTitle">VÍTĚZNÁ FLOTILA!</div>
+      <p id="winSubtitle" style="font-size:1.2rem;color:var(--text-main);margin-bottom:10px;"></p>
+      <div class="win-stats-grid" id="winStatsGrid"></div>
+      <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:12px;margin-top:16px;">
+        <button class="btn btn-gold btn-lg" id="btnWinViewMap">🗺️ Zobrazit odhalenou mapu 8×8</button>
+        <button class="btn btn-primary btn-lg" id="btnWinNewGame">🔄 Nová hra / Lobby</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast hidden" id="toastBox"></div>
+
+  <script>
+    /* =========================================================================
+       1. COMPLETE DATABASE OF 100 QUESTIONS
+       ========================================================================= */
+    const DEFAULT_QUESTIONS = [
+      // --- A) STANDARD SHOT (1–40): Najdi a oprav 1 gramatickou chybu, 20 s, +100 b. ---
+      { id: 1, category: 'standard', q: "She didn't went to school yesterday.", a: "didn't go" },
+      { id: 2, category: 'standard', q: "There was five pirates on the ship.", a: "There were" },
+      { id: 3, category: 'standard', q: "He don't like swimming in the ocean.", a: "doesn't like" },
+      { id: 4, category: 'standard', q: "Where did you bought this old map?", a: "did you buy" },
+      { id: 5, category: 'standard', q: "Look! The captain sleeps right now.", a: "is sleeping" },
+      { id: 6, category: 'standard', q: "My brother is more tall than me.", a: "taller" },
+      { id: 7, category: 'standard', q: "We was watching a movie at 8 PM.", a: "were watching" },
+      { id: 8, category: 'standard', q: "She cans speak English very well.", a: "can speak" },
+      { id: 9, category: 'standard', q: "I didn't see nobody on the island.", a: "anybody (nebo I saw nobody)" },
+      { id: 10, category: 'standard', q: "How many money do you have?", a: "How much" },
+      { id: 11, category: 'standard', q: "He runned away from the shark.", a: "ran away" },
+      { id: 12, category: 'standard', q: "Does your sister likes horror movies?", a: "Does your sister like" },
+      { id: 13, category: 'standard', q: "I am going to the gym every Monday.", a: "I go (pravidelný děj)" },
+      { id: 14, category: 'standard', q: "They didn't had time for breakfast.", a: "didn't have" },
+      { id: 15, category: 'standard', q: "This is the most good game ever!", a: "the best" },
+      { id: 16, category: 'standard', q: "Yesterday I buyed a new jacket.", a: "bought" },
+      { id: 17, category: 'standard', q: "Why you are laughing at me?", a: "Why are you" },
+      { id: 18, category: 'standard', q: "My parents lives in a big house.", a: "live" },
+      { id: 19, category: 'standard', q: "She has got a two dogs.", a: "two dogs (bez členu 'a')" },
+      { id: 20, category: 'standard', q: "I am not believing in ghosts.", a: "I don't believe" },
+      { id: 21, category: 'standard', q: "When I was five, I can swim.", a: "I could swim" },
+      { id: 22, category: 'standard', q: "He don't have any brothers or sisters.", a: "doesn't have" },
+      { id: 23, category: 'standard', q: "We went to London on July.", a: "in July" },
+      { id: 24, category: 'standard', q: "Listen! Somebody knocks on the door.", a: "is knocking" },
+      { id: 25, category: 'standard', q: "Did you saw the giant whale?", a: "Did you see" },
+      { id: 26, category: 'standard', q: "There isn't any chairs in the room.", a: "There aren't" },
+      { id: 27, category: 'standard', q: "I must to finish my homework tonight.", a: "must finish (bez 'to')" },
+      { id: 28, category: 'standard', q: "She is more older than her friend.", a: "older (bez 'more')" },
+      { id: 29, category: 'standard', q: "My phone is on my pocket.", a: "in my pocket" },
+      { id: 30, category: 'standard', q: "Who taked my pen from the desk?", a: "Who took" },
+      { id: 31, category: 'standard', q: "I usually get to home at four.", a: "get home (bez 'to')" },
+      { id: 32, category: 'standard', q: "He feeled very sick after the storm.", a: "felt" },
+      { id: 33, category: 'standard', q: "We didn't played football last Sunday.", a: "didn't play" },
+      { id: 34, category: 'standard', q: "Are you knowing the right answer?", a: "Do you know" },
+      { id: 35, category: 'standard', q: "I have never be to New York.", a: "have never been" },
+      { id: 36, category: 'standard', q: "The children is playing in the garden.", a: "are playing" },
+      { id: 37, category: 'standard', q: "She always wear a warm coat.", a: "always wears" },
+      { id: 38, category: 'standard', q: "He was born in 15th May.", a: "on 15th May" },
+      { id: 39, category: 'standard', q: "I am taller that my best friend.", a: "taller than" },
+      { id: 40, category: 'standard', q: "They heared a strange noise outside.", a: "heard" },
+
+      // --- B) RAPID FIRE (41–75): 15 s – Rychlá akce, nepravidelná slovesa, slovní zásoba, +100 b. ---
+      { id: 41, category: 'rapid', q: "Past tense of: BUY, CATCH, THINK", a: "bought, caught, thought" },
+      { id: 42, category: 'rapid', q: "Name 4 sea animals!", a: "např. shark, whale, dolphin, octopus, crab, turtle" },
+      { id: 43, category: 'rapid', q: "Past tense of: SWIM, FLY, WRITE", a: "swam, flew, wrote" },
+      { id: 44, category: 'rapid', q: "Name 4 weather words!", a: "např. sunny, rainy, windy, foggy, stormy, snowy" },
+      { id: 45, category: 'rapid', q: "Past tense of: BREAK, STEAL, WEAR", a: "broke, stole, wore" },
+      { id: 46, category: 'rapid', q: "Opposites of: DEEP, FAST, CHEAP", a: "shallow, slow, expensive" },
+      { id: 47, category: 'rapid', q: "Past tense of: FEEL, HEAR, KNOW", a: "felt, heard, knew" },
+      { id: 48, category: 'rapid', q: "Name 4 things you can find on a ship or beach!", a: "např. anchor, sail, sand, shell, towel, compass" },
+      { id: 49, category: 'rapid', q: "Past tense of: BRING, TEACH, LEAVE", a: "brought, taught, left" },
+      { id: 50, category: 'rapid', q: "Name 4 irregular plural nouns!", a: "men, women, children, teeth, mice, feet, people" },
+      { id: 51, category: 'rapid', q: "Past tense of: EAT, DRINK, SLEEP", a: "ate, drank, slept" },
+      { id: 52, category: 'rapid', q: "Opposites of: DANGEROUS, BORING, POLITE", a: "safe, interesting/exciting, rude/impolite" },
+      { id: 53, category: 'rapid', q: "Name 4 school subjects in English!", a: "např. Maths, History, Geography, Biology, Art, PE" },
+      { id: 54, category: 'rapid', q: "Past tense of: GIVE, TAKE, MAKE", a: "gave, took, made" },
+      { id: 55, category: 'rapid', q: "Name 4 pieces of winter clothing!", a: "např. coat, scarf, gloves, beanie, boots, sweater" },
+      { id: 56, category: 'rapid', q: "Past tense of: SEE, SPEAK, DRIVE", a: "saw, spoke, drove" },
+      { id: 57, category: 'rapid', q: "Opposites of: HEAVY, EMPTY, NOISY", a: "light, full, quiet" },
+      { id: 58, category: 'rapid', q: "Name 4 jobs ending in -ER or -OR!", a: "např. teacher, doctor, driver, actor, waiter, singer" },
+      { id: 59, category: 'rapid', q: "Past tense of: FIND, LOSE, WIN", a: "found, lost, won" },
+      { id: 60, category: 'rapid', q: "Name 4 parts of the face!", a: "např. eyes, nose, mouth, ears, cheeks, chin, forehead" },
+      { id: 61, category: 'rapid', q: "Past tense of: BEGIN, SING, RING", a: "began, sang, rang" },
+      { id: 62, category: 'rapid', q: "Opposites of: MODERN, CLEAN, STRONG", a: "old/ancient, dirty, weak" },
+      { id: 63, category: 'rapid', q: "Name 4 kinds of fruit!", a: "např. apple, banana, orange, strawberry, grape, pear" },
+      { id: 64, category: 'rapid', q: "Past tense of: TELL, SELL, PAY", a: "told, sold, paid" },
+      { id: 65, category: 'rapid', q: "Name 4 means of transport!", a: "např. train, plane, ship, bus, tram, bike, car" },
+      { id: 66, category: 'rapid', q: "Past tense of: FALL, GROW, THROW", a: "fell, grew, threw" },
+      { id: 67, category: 'rapid', q: "Name 3 English words with a SILENT letter!", a: "např. knife, know, write, hour, ghost, island, castle" },
+      { id: 68, category: 'rapid', q: "Past tense of: SEND, SPEND, BUILD", a: "sent, spent, built" },
+      { id: 69, category: 'rapid', q: "Name 4 rooms in a house!", a: "např. kitchen, bathroom, bedroom, living room, hall, attic" },
+      { id: 70, category: 'rapid', q: "Opposites of: EARLY, BRAVE, WIDE", a: "late, cowardly/scared, narrow" },
+      { id: 71, category: 'rapid', q: "Past tense of: MEET, KEEP, CHOOSE", a: "met, kept, chose" },
+      { id: 72, category: 'rapid', q: "Name 4 sports that don't use a ball!", a: "např. swimming, running, skiing, boxing, cycling, skating" },
+      { id: 73, category: 'rapid', q: "Past tense of: RIDE, HIDE, BITE", a: "rode, hid, bit" },
+      { id: 74, category: 'rapid', q: "Name 4 things you can find in a kitchen!", a: "např. fridge, oven, knife, spoon, plate, kettle, sink" },
+      { id: 75, category: 'rapid', q: "Past tense of: UNDERSTAND, FORGET, FORGIVE", a: "understood, forgot, forgave" },
+
+      // --- C) HEAVY CANNON (76–100): Překlad celé věty / Těžká gramatika, 20 s, +200 b. ---
+      { id: 76, category: 'heavy', q: "Když jsem včera šel domů, začalo pršet.", a: "While/When I was walking home yesterday, it started to rain." },
+      { id: 77, category: 'heavy', q: "Proč jsi mi včera večer nezavolal?", a: "Why didn't you call me last night / yesterday evening?" },
+      { id: 78, category: 'heavy', q: "Tohle je ten nejnebezpečnější oceán na světě.", a: "This is the most dangerous ocean in the world." },
+      { id: 79, category: 'heavy', q: "Nikdy jsem neviděl tak velkou loď.", a: "I have never seen such a big ship." },
+      { id: 80, category: 'heavy', q: "Musíš být potichu, protože kapitán spí.", a: "You must be quiet because the captain is sleeping." },
+      { id: 81, category: 'heavy', q: "Obvykle jezdíme k moři, ale letos jsme zůstali doma.", a: "We usually go to the sea, but this year we stayed at home." },
+      { id: 82, category: 'heavy', q: "Kolik lodí jste potopili minulý týden?", a: "How many ships did you sink last week?" },
+      { id: 83, category: 'heavy', q: "Jestli najdeme poklad, budeme bohatí.", a: "If we find the treasure, we will be rich." },
+      { id: 84, category: 'heavy', q: "Co jsi dělal včera v osm hodin večer?", a: "What were you doing at eight o'clock last night?" },
+      { id: 85, category: 'heavy', q: "Už jsi někdy jedl rybu v Anglii?", a: "Have you ever eaten fish in England?" },
+      { id: 86, category: 'heavy', q: "Tato ponorka je rychlejší a dražší než ta stará.", a: "This submarine is faster and more expensive than the old one." },
+      { id: 87, category: 'heavy', q: "Nesmíš tady plavat, protože ve vodě jsou žraloci.", a: "You mustn't swim here because there are sharks in the water." },
+      { id: 88, category: 'heavy', q: "Můj kamarád neumí hrát na kytaru, ale skvěle zpívá.", a: "My friend can't play the guitar, but he sings great / very well." },
+      { id: 89, category: 'heavy', q: "Zatímco jsme sledovali film, zhasla světla.", a: "While we were watching a movie, the lights went out." },
+      { id: 90, category: 'heavy', q: "Jestli bude zítra pršet, nepůjdeme na pláž.", a: "If it rains tomorrow, we won't go to the beach." },
+      { id: 91, category: 'heavy', q: "Byl jsem tak unavený, že jsem okamžitě usnul.", a: "I was so tired that I fell asleep immediately." },
+      { id: 92, category: 'heavy', q: "Kdo ukradl zlatý kompas z mé kajuty?", a: "Who stole the golden compass from my cabin?" },
+      { id: 93, category: 'heavy', q: "Kde jsi koupil ty nové boty? Jsou moc drahé!", a: "Where did you buy those new shoes? They are too expensive!" },
+      { id: 94, category: 'heavy', q: "V mojí třídě není nikdo vyšší než můj bratr.", a: "Nobody in my class is taller than my brother." },
+      { id: 95, category: 'heavy', q: "Právě teď prší, takže si vezmu deštník.", a: "It is raining right now, so I will take an umbrella." },
+      { id: 96, category: 'heavy', q: "Kolik stojí ty lístky na loď?", a: "How much do those boat/ship tickets cost? (nebo How much are...)" },
+      { id: 97, category: 'heavy', q: "Minulý rok jsme letěli do Španělska a hotel byl úžasný.", a: "Last year we flew to Spain and the hotel was amazing." },
+      { id: 98, category: 'heavy', q: "Obvykle piju čaj, ale dneska piju horkou čokoládu.", a: "I usually drink tea, but today I am drinking hot chocolate." },
+      { id: 99, category: 'heavy', q: "Zapomněl jsem si doma klíče a nemohl jsem se dostat dovnitř.", a: "I forgot my keys at home and I couldn't get inside." },
+      { id: 100, category: 'heavy', q: "Tohle je ten nejhorší film, jaký jsem kdy viděl!", a: "This is the worst movie/film (that) I have ever seen!" }
+    ];
+
+    /* =========================================================================
+       2. CONSTANTS & CONFIGURATION
+       ========================================================================= */
+    const STORAGE_KEY = 'english_battleships_naval_command_v1';
+    const COLS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
+    const ROWS = [1, 2, 3, 4, 5, 6, 7, 8];
+
+    const SHIP_BLUEPRINTS = [
+      { type: 'carrier', name: 'Aircraft Carrier', size: 4, count: 1, sinkBonus: 300 },
+      { type: 'cruiser', name: 'Cruiser', size: 3, count: 2, sinkBonus: 200 },
+      { type: 'destroyer', name: 'Destroyer', size: 2, count: 3, sinkBonus: 150 },
+      { type: 'submarine', name: 'Submarine', size: 1, count: 5, sinkBonus: 50 } // +100 hit + 50 bonus = +150 total
+    ];
+
+    const SPECIAL_EVENTS = [
+      { code: 'RADAR', icon: '📡', name: 'RADAR SCAN', fixedCoord: 'A4', desc: 'Na 6 sekund zlatě rozbliká jedno nepoškozené políčko lodi na mapě!' },
+      { code: 'DOUBLE', icon: '🚀', name: 'DOUBLE TORPEDO', fixedCoord: 'C2', desc: 'Tým zůstává na tahu a získává okamžitý bonusový tah navíc!' },
+      { code: 'PIRATE', icon: '🏴‍☠️', name: 'PIRATE RAID', fixedCoord: 'E6', desc: 'Ukradne soupeři 200 bodů (soupeř −200 b., váš tým +200 b.)!' },
+      { code: 'TREASURE', icon: '💰', name: 'TREASURE CHEST', fixedCoord: 'G7', desc: '+250 bodů zdarma přímo do pokladnice flotily!' },
+      { code: 'MINE1', icon: '💣', name: 'SEA MINE', fixedCoord: 'B7', desc: 'Výbuch námořní miny! −150 bodů vlastnímu týmu.' },
+      { code: 'MINE2', icon: '💣', name: 'SEA MINE', fixedCoord: 'F2', desc: 'Výbuch námořní miny! −150 bodů vlastnímu týmu.' },
+      { code: 'BERMUDA', icon: '🌀', name: 'BERMUDA TRIANGLE', fixedCoord: 'C8', desc: 'Okamžitá výměna celkového skóre mezi oběma flotilami!' }
+    ];
+
+    const WEAPONS = {
+      standard: { label: '🔫 STANDARD SHOT', time: 20, hitPoints: 100, catName: 'Oprava gramatické chyby' },
+      rapid:    { label: '⚡ RAPID FIRE',    time: 15, hitPoints: 100, catName: 'Slovní zásoba / Nepravidelná slovesa' },
+      heavy:    { label: '💣 HEAVY CANNON',  time: 20, hitPoints: 200, catName: 'Překlad celé věty / Těžká gramatika' }
+    };
+
+    /* =========================================================================
+       3. WEB AUDIO API SYNTHESIZER
+       ========================================================================= */
+    const SoundFX = {
+      ctx: null,
+      enabled: true,
+      init() {
+        if (!this.ctx) {
+          const AudioCtx = window.AudioContext || window.webkitAudioContext;
+          if (AudioCtx) this.ctx = new AudioCtx();
+        }
+        if (this.ctx && this.ctx.state === 'suspended') {
+          this.ctx.resume();
+        }
+      },
+      playTone(freq, duration, type = 'sine', volume = 0.2, freqEnd = null, delay = 0) {
+        if (!this.enabled) return;
+        this.init();
+        if (!this.ctx) return;
+        const now = this.ctx.currentTime + delay;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, now);
+        if (freqEnd !== null) {
+          osc.frequency.exponentialRampToValueAtTime(Math.max(20, freqEnd), now + duration);
+        }
+        gain.gain.setValueAtTime(volume, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + duration + 0.02);
+      },
+      playNoise(duration, volume = 0.25, lowpassFreq = 800, delay = 0) {
+        if (!this.enabled) return;
+        this.init();
+        if (!this.ctx) return;
+        const now = this.ctx.currentTime + delay;
+        const bufferSize = Math.floor(this.ctx.sampleRate * duration);
+        const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+          data[i] = Math.random() * 2 - 1;
+        }
+        const noise = this.ctx.createBufferSource();
+        noise.buffer = buffer;
+        const filter = this.ctx.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(lowpassFreq, now);
+        filter.frequency.exponentialRampToValueAtTime(100, now + duration);
+        const gain = this.ctx.createGain();
+        gain.gain.setValueAtTime(volume, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+        noise.connect(filter);
+        filter.connect(gain);
+        gain.connect(this.ctx.destination);
+        noise.start(now);
+        noise.stop(now + duration + 0.02);
+      },
+      sonar() {
+        this.playTone(1320, 0.35, 'sine', 0.18, 1280);
+        this.playTone(1320, 0.22, 'sine', 0.08, 1280, 0.25);
+      },
+      tick(urgent = false) {
+        this.playTone(urgent ? 980 : 620, 0.06, 'square', urgent ? 0.12 : 0.06);
+      },
+      cannon() {
+        this.playNoise(0.28, 0.35, 900);
+        this.playTone(140, 0.25, 'sawtooth', 0.25, 38);
+      },
+      splash() {
+        this.playNoise(0.45, 0.25, 2200, 0.12);
+        this.playTone(320, 0.18, 'sine', 0.12, 120, 0.12);
+      },
+      explosion() {
+        this.playNoise(0.75, 0.45, 550, 0.1);
+        this.playTone(110, 0.65, 'sawtooth', 0.32, 24, 0.1);
+      },
+      sunkHorn() {
+        this.playTone(165, 0.9, 'sawtooth', 0.22, 130, 0.15);
+        this.playTone(124, 0.9, 'triangle', 0.22, 98, 0.15);
+      },
+      misfire() {
+        this.playTone(210, 0.22, 'sawtooth', 0.18, 85);
+        this.playTone(140, 0.32, 'square', 0.14, 55, 0.16);
+      },
+      specialGood() {
+        this.playTone(523.25, 0.15, 'triangle', 0.2, null, 0);
+        this.playTone(659.25, 0.15, 'triangle', 0.2, null, 0.12);
+        this.playTone(783.99, 0.22, 'triangle', 0.22, null, 0.24);
+        this.playTone(1046.5, 0.35, 'triangle', 0.22, null, 0.36);
+      },
+      specialBad() {
+        this.playTone(310, 0.25, 'sawtooth', 0.2, 220, 0);
+        this.playTone(220, 0.35, 'sawtooth', 0.22, 110, 0.2);
+      },
+      fanfare() {
+        const notes = [
+          [523.25, 0.16, 0],
+          [659.25, 0.16, 0.16],
+          [783.99, 0.16, 0.32],
+          [1046.5, 0.45, 0.48],
+          [783.99, 0.18, 0.96],
+          [1046.5, 0.65, 1.15]
+        ];
+        notes.forEach(([f, d, delay]) => this.playTone(f, d, 'triangle', 0.24, null, delay));
+      }
+    };
+
+    /* =========================================================================
+       4. APPLICATION STATE & PERSISTENCE
+       ========================================================================= */
+    let state = null;
+    let lockedCoord = null;
+    let currentWeapon = null;
+    let currentQuestion = null;
+    let qTimerInterval = null;
+    let qTimeLeft = 0;
+    let qTimeTotal = 20;
+    let qTimerPaused = false;
+    let radarFlashCoords = [];
+    let radarFlashTimeout = null;
+    let teacherMapVisible = false;
+    let editorFilter = 'all';
+
+    // All-Out War runtime state
+    let aowState = {
+      active: false,
+      stage: 'idle', // 'countdown', 'pickA', 'pickB', 'qA', 'qB', 'done'
+      timer: 30,
+      timerId: null,
+      targetsA: [],
+      targetsB: []
+    };
+
+    function createInitialState() {
+      const questionsCopy = JSON.parse(JSON.stringify(DEFAULT_QUESTIONS));
+      const base = {
+        phase: 'lobby', // 'lobby' | 'battle'
+        soundEnabled: true,
+        fixedSpecials: true,
+        teams: [
+          {
+            name: '⚓ The Kraken',
+            players: ['Hráč A1', 'Hráč A2', 'Hráč A3'],
+            captainIndex: 0,
+            score: 0,
+            stats: { hits: 0, misses: 0, misfires: 0, sunk: 0, specials: 0 }
+          },
+          {
+            name: '🚢 Iron Fleet',
+            players: ['Hráč B1', 'Hráč B2', 'Hráč B3', 'Hráč B4'],
+            captainIndex: 0,
+            score: 0,
+            stats: { hits: 0, misses: 0, misfires: 0, sunk: 0, specials: 0 }
+          }
+        ],
+        activeTeam: 0,
+        lastCoord: 'B4',
+        lastEventText: 'Klikněte na políčko 8×8 pro zaměření cíle.',
+        ships: [],
+        board: {}, // coord -> { shipId: null|string, special: null|string, opened: false, result: null|'miss'|'hit'|'sunk'|'special' }
+        questions: questionsCopy,
+        usedQuestionIds: [],
+        shuffledPools: { standard: [], rapid: [], heavy: [] },
+        gameFinished: false
+      };
+      generateOceanIntoState(base);
+      return base;
+    }
+
+    function saveState() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      } catch (e) {
+        console.warn('localStorage save error:', e);
+      }
+    }
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (parsed && parsed.teams && parsed.board && parsed.questions) {
+            return parsed;
+          }
+        }
+      } catch (e) {
+        console.warn('localStorage load error:', e);
+      }
+      return createInitialState();
+    }
+
+    /* =========================================================================
+       5. OCEAN 8x8 GENERATOR (STRICT NO-TOUCHING RULE EVEN DIAGONALLY)
+       ========================================================================= */
+    function coordToRC(coord) {
+      const c = COLS.indexOf(coord[0]);
+      const r = parseInt(coord.slice(1), 10) - 1;
+      return { r, c };
+    }
+
+    function rcToCoord(r, c) {
+      return COLS[c] + String(r + 1);
+    }
+
+    function shuffleArray(arr) {
+      const a = arr.slice();
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+
+    function generateOceanIntoState(targetState) {
+      const useFixed = targetState.fixedSpecials;
+      const fixedSpecialMap = {};
+      if (useFixed) {
+        SPECIAL_EVENTS.forEach(ev => {
+          fixedSpecialMap[ev.fixedCoord] = ev.code;
+        });
+      }
+
+      // Build list of 11 ships to place (largest first)
+      const shipsToPlace = [];
+      let shipCounter = 1;
+      SHIP_BLUEPRINTS.forEach(bp => {
+        for (let i = 0; i < bp.count; i++) {
+          shipsToPlace.push({
+            id: `ship_${shipCounter++}`,
+            type: bp.type,
+            name: bp.name,
+            size: bp.size,
+            sinkBonus: bp.sinkBonus,
+            cells: [],
+            hits: [],
+            sunk: false
+          });
+        }
+      });
+
+      let success = false;
+      let placedShips = [];
+      let gridShip = null;
+
+      for (let attempt = 0; attempt < 600; attempt++) {
+        gridShip = Array.from({ length: 8 }, () => Array(8).fill(null));
+        placedShips = shipsToPlace.map(s => ({ ...s, cells: [], hits: [], sunk: false }));
+        let allPlaced = true;
+
+        for (const ship of placedShips) {
+          const candidates = [];
+          for (let r = 0; r < 8; r++) {
+            for (let c = 0; c < 8; c++) {
+              const orientations = ship.size === 1 ? [[0, 1]] : [[0, 1], [1, 0]];
+              for (const [dr, dc] of orientations) {
+                const endR = r + dr * (ship.size - 1);
+                const endC = c + dc * (ship.size - 1);
+                if (endR >= 8 || endC >= 8) continue;
+
+                let valid = true;
+                const cells = [];
+                for (let k = 0; k < ship.size; k++) {
+                  const nr = r + dr * k;
+                  const nc = c + dc * k;
+                  const coord = rcToCoord(nr, nc);
+                  // Cannot overlap fixed special tile
+                  if (useFixed && fixedSpecialMap[coord]) {
+                    valid = false;
+                    break;
+                  }
+                  // Check 3x3 neighborhood around (nr, nc) for any existing ship
+                  for (let ar = Math.max(0, nr - 1); ar <= Math.min(7, nr + 1); ar++) {
+                    for (let ac = Math.max(0, nc - 1); ac <= Math.min(7, nc + 1); ac++) {
+                      if (gridShip[ar][ac] !== null) {
+                        valid = false;
+                        break;
+                      }
+                    }
+                    if (!valid) break;
+                  }
+                  if (!valid) break;
+                  cells.push({ r: nr, c: nc, coord });
+                }
+
+                if (valid) {
+                  candidates.push(cells);
+                }
+              }
+            }
+          }
+
+          if (candidates.length === 0) {
+            allPlaced = false;
+            break;
+          }
+
+          const chosen = candidates[Math.floor(Math.random() * candidates.length)];
+          chosen.forEach(cell => {
+            gridShip[cell.r][cell.c] = ship.id;
+            ship.cells.push(cell.coord);
+          });
+        }
+
+        if (allPlaced) {
+          success = true;
+          break;
+        }
+      }
+
+      if (!success) {
+        // Guaranteed fallback if ever needed (extremely unlikely)
+        targetState.fixedSpecials = false;
+        return generateOceanIntoState(targetState);
+      }
+
+      // Build board dictionary
+      const board = {};
+      for (let r = 0; r < 8; r++) {
+        for (let c = 0; c < 8; c++) {
+          const coord = rcToCoord(r, c);
+          board[coord] = {
+            shipId: gridShip[r][c],
+            special: null,
+            opened: false,
+            result: null
+          };
+        }
+      }
+
+      // Place 7 special events
+      if (useFixed) {
+        SPECIAL_EVENTS.forEach(ev => {
+          board[ev.fixedCoord].special = ev.code;
+        });
+      } else {
+        const emptyCoords = Object.keys(board).filter(k => !board[k].shipId);
+        const shuffledEmpty = shuffleArray(emptyCoords);
+        SPECIAL_EVENTS.forEach((ev, idx) => {
+          if (shuffledEmpty[idx]) {
+            board[shuffledEmpty[idx]].special = ev.code;
+          }
+        });
+      }
+
+      targetState.ships = placedShips;
+      targetState.board = board;
+    }
+
+    /* =========================================================================
+       6. NO-REPEAT RANDOMIZER (FISHER-YATES)
+       ========================================================================= */
+    function getCategoryQuestions(cat) {
+      return state.questions.filter(q => q.category === cat);
+    }
+
+    function getRemainingCount(cat) {
+      const catQs = getCategoryQuestions(cat);
+      const usedSet = new Set(state.usedQuestionIds);
+      return catQs.filter(q => !usedSet.has(q.id)).length;
+    }
+
+    function drawRandomQuestion(cat, excludeId = null) {
+      const catQs = getCategoryQuestions(cat);
+      if (catQs.length === 0) return null;
+
+      let usedSet = new Set(state.usedQuestionIds);
+      let unused = catQs.filter(q => !usedSet.has(q.id));
+
+      // If category deck is exhausted, automatically reshuffle this category
+      if (unused.length === 0) {
+        const catIds = new Set(catQs.map(q => q.id));
+        state.usedQuestionIds = state.usedQuestionIds.filter(id => !catIds.has(id));
+        state.shuffledPools[cat] = shuffleArray(catQs.map(q => q.id));
+        showToast(`🔄 Balíček "${WEAPONS[cat].label}" byl vyčerpán a automaticky znovu promíchán!`);
+        usedSet = new Set(state.usedQuestionIds);
+        unused = catQs.filter(q => !usedSet.has(q.id));
+      }
+
+      // Rebuild shuffled pool if empty or missing valid IDs
+      const unusedIdsSet = new Set(unused.map(q => q.id));
+      let pool = (state.shuffledPools[cat] || []).filter(id => unusedIdsSet.has(id));
+      if (pool.length === 0) {
+        pool = shuffleArray(Array.from(unusedIdsSet));
+      }
+
+      // If swapping and there's another question available, avoid excludeId
+      let pickIdx = 0;
+      if (excludeId !== null && pool.length > 1 && pool[0] === excludeId) {
+        pickIdx = 1;
+      }
+
+      const chosenId = pool.splice(pickIdx, 1)[0];
+      state.shuffledPools[cat] = pool;
+      if (!state.usedQuestionIds.includes(chosenId)) {
+        state.usedQuestionIds.push(chosenId);
+      }
+      saveState();
+
+      return catQs.find(q => q.id === chosenId) || unused[0];
+    }
+
+    /* =========================================================================
+       7. UI RENDERING
+       ========================================================================= */
+    function showToast(msg, duration = 3500) {
+      const box = document.getElementById('toastBox');
+      box.textContent = msg;
+      box.classList.remove('hidden');
+      clearTimeout(box._t);
+      box._t = setTimeout(() => box.classList.add('hidden'), duration);
+    }
+
+    function renderAll() {
+      // Top bar buttons
+      document.getElementById('btnSound').textContent = state.soundEnabled ? '🔊 Zvuk ON' : '🔇 Zvuk OFF';
+      SoundFX.enabled = state.soundEnabled;
+
+      const inBattle = state.phase === 'battle';
+      document.getElementById('phaseLobby').classList.toggle('hidden', inBattle);
+      document.getElementById('phaseBattle').classList.toggle('hidden', !inBattle);
+      document.getElementById('btnTeacherMap').classList.toggle('hidden', !inBattle);
+      document.getElementById('btnAllOutWar').classList.toggle('hidden', !inBattle);
+
+      if (!inBattle) {
+        renderLobby();
+      } else {
+        renderBattle();
+      }
+    }
+
+    function renderLobby() {
+      document.getElementById('inputTeamAName').value = state.teams[0].name;
+      document.getElementById('inputTeamBName').value = state.teams[1].name;
+      document.getElementById('chkFixedSpecials').checked = state.fixedSpecials;
+
+      [0, 1].forEach(tIdx => {
+        const container = document.getElementById(tIdx === 0 ? 'rosterListA' : 'rosterListB');
+        container.innerHTML = '';
+        state.teams[tIdx].players.forEach((pName, pIdx) => {
+          const row = document.createElement('div');
+          row.className = 'roster-row';
+          row.innerHTML = `
+            <span class="roster-badge">${pIdx + 1}</span>
+            <input type="text" value="${escapeHtml(pName)}" data-team="${tIdx}" data-player="${pIdx}" placeholder="Jméno hráče ${pIdx + 1}" />
+          `;
+          row.querySelector('input').addEventListener('input', (e) => {
+            state.teams[tIdx].players[pIdx] = e.target.value;
+            saveState();
+          });
+          container.appendChild(row);
+        });
+      });
+    }
+
+    function renderBattle() {
+      // Teams panel
+      [0, 1].forEach(tIdx => {
+        const team = state.teams[tIdx];
+        const suffix = tIdx === 0 ? 'A' : 'B';
+        const isActive = state.activeTeam === tIdx && !aowState.active;
+
+        document.getElementById(`cardTeam${suffix}`).classList.toggle('active-turn', isActive);
+        document.getElementById(`badgeTurn${suffix}`).classList.toggle('hidden', !isActive);
+        document.getElementById(`nameTeam${suffix}`).textContent = team.name;
+
+        const capIdx = team.captainIndex % team.players.length;
+        const capName = team.players[capIdx] || `Kapitán ${capIdx + 1}`;
+        document.getElementById(`captainTeam${suffix}`).textContent = capName;
+
+        const pillsWrap = document.getElementById(`pillsTeam${suffix}`);
+        pillsWrap.innerHTML = team.players.map((p, idx) =>
+          `<span class="roster-pill ${idx === capIdx ? 'current' : ''}">${idx + 1}. ${escapeHtml(p)}</span>`
+        ).join('');
+
+        const scoreEl = document.getElementById(`scoreTeam${suffix}`);
+        scoreEl.textContent = team.score;
+        scoreEl.classList.toggle('negative', team.score < 0);
+      });
+
+      // Speaking bar
+      const activeTeam = state.teams[state.activeTeam];
+      const activeCap = activeTeam.players[activeTeam.captainIndex % activeTeam.players.length] || 'Kapitán';
+      document.getElementById('speakCaptainLabel').textContent = `${activeCap} (${activeTeam.name})`;
+      document.getElementById('speakCoord').textContent = `[${state.lastCoord || 'B4'}]`;
+      document.getElementById('lastEventBanner').textContent = state.lastEventText;
+
+      // Teacher map button style
+      const tBtn = document.getElementById('btnTeacherMap');
+      tBtn.classList.toggle('active', teacherMapVisible);
+      tBtn.textContent = teacherMapVisible ? '👁️ Skrýt tajnou mapu' : '👁️ Tajná mapa učitele';
+
+      renderBoard();
+      renderSidebar();
+    }
+
+    function renderBoard() {
+      const grid = document.getElementById('boardGrid');
+      grid.innerHTML = '';
+
+      // Top-left corner
+      const corner = document.createElement('div');
+      corner.className = 'axis-label';
+      corner.textContent = '⚓';
+      grid.appendChild(corner);
+
+      // Column headers A–H
+      COLS.forEach(col => {
+        const lbl = document.createElement('div');
+        lbl.className = 'axis-label';
+        lbl.textContent = col;
+        grid.appendChild(lbl);
+      });
+
+      // Rows 1–8
+      ROWS.forEach(row => {
+        const rowLbl = document.createElement('div');
+        rowLbl.className = 'axis-label';
+        rowLbl.textContent = row;
+        grid.appendChild(rowLbl);
+
+        COLS.forEach(col => {
+          const coord = col + row;
+          const cellData = state.board[coord];
+          const div = document.createElement('div');
+          div.className = 'cell';
+          div.dataset.coord = coord;
+
+          if (cellData.opened) {
+            div.classList.add('opened');
+            if (cellData.result === 'miss') {
+              div.classList.add('state-miss');
+              div.innerHTML = `<span class="cell-coord">${coord}</span><span>~</span>`;
+            } else if (cellData.result === 'hit') {
+              div.classList.add('state-hit');
+              div.innerHTML = `<span class="cell-coord">${coord}</span><span>X</span>`;
+            } else if (cellData.result === 'sunk') {
+              div.classList.add('state-sunk');
+              div.innerHTML = `<span class="cell-coord">${coord}</span><span class="sunk-symbol">#</span>`;
+            } else if (cellData.result === 'special') {
+              const ev = SPECIAL_EVENTS.find(e => e.code === cellData.special);
+              div.classList.add('state-special');
+              div.innerHTML = `<span class="cell-coord">${coord}</span><span>★</span><span style="font-size:0.75rem;">${ev ? ev.icon : ''}</span>`;
+            }
+          } else {
+            div.innerHTML = `<span class="cell-coord">${coord}</span>`;
+            if (lockedCoord === coord) {
+              div.classList.add('locked');
+            }
+            if (radarFlashCoords.includes(coord)) {
+              div.classList.add('radar-flash');
+            }
+          }
+
+          // Teacher secret map overlay
+          if (teacherMapVisible && !cellData.opened) {
+            if (cellData.shipId) {
+              const ship = state.ships.find(s => s.id === cellData.shipId);
+              const tag = document.createElement('span');
+              tag.className = 'teacher-hint ship-hint';
+              tag.textContent = ship ? `🚢${ship.size}` : '🚢';
+              div.appendChild(tag);
+            } else if (cellData.special) {
+              const ev = SPECIAL_EVENTS.find(e => e.code === cellData.special);
+              const tag = document.createElement('span');
+              tag.className = 'teacher-hint special-hint';
+              tag.textContent = ev ? ev.icon : '★';
+              div.appendChild(tag);
+            }
+          }
+
+          // All-Out War target indicators
+          if (aowState.active) {
+            const inA = aowState.targetsA.includes(coord);
+            const inB = aowState.targetsB.includes(coord);
+            if (inA || inB) {
+              const b = document.createElement('div');
+              b.className = 'aow-badge ' + (inA && inB ? 'team-both' : inA ? 'team-a' : 'team-b');
+              b.textContent = inA && inB ? 'A+B' : inA ? '🎯A' : '🎯B';
+              div.appendChild(b);
+            }
+          }
+
+          div.addEventListener('click', () => handleCellClick(coord));
+          grid.appendChild(div);
+        });
+      });
+    }
+
+    function renderSidebar() {
+      const list = document.getElementById('shipStatusList');
+      list.innerHTML = '';
+      let remainingTotal = 0;
+
+      SHIP_BLUEPRINTS.forEach(bp => {
+        const ofType = state.ships.filter(s => s.type === bp.type);
+        const alive = ofType.filter(s => !s.sunk).length;
+        remainingTotal += alive;
+
+        const row = document.createElement('div');
+        row.className = 'ship-row' + (alive === 0 ? ' all-sunk' : '');
+        const blocksHtml = Array(bp.size).fill('<span class="ship-block"></span>').join('');
+        const bonusTxt = bp.type === 'submarine' ? '+150 b. celkem' : `+${bp.sinkBonus} b. bonus`;
+
+        row.innerHTML = `
+          <div class="ship-meta">
+            <strong>${bp.name} (${bp.size})</strong>
+            <div class="ship-blocks">${blocksHtml}</div>
+            <small>${bonusTxt}</small>
+          </div>
+          <div class="ship-count-badge">${alive} / ${bp.count}</div>
+        `;
+        list.appendChild(row);
+      });
+
+      document.getElementById('totalShipsLeft').textContent = `${remainingTotal} / ${state.ships.length}`;
+
+      // Deck stats
+      const deckList = document.getElementById('deckStatsList');
+      const cats = [
+        { key: 'standard', label: '🔫 Standard Shot' },
+        { key: 'rapid', label: '⚡ Rapid Fire' },
+        { key: 'heavy', label: '💣 Heavy Cannon' }
+      ];
+      deckList.innerHTML = cats.map(c => {
+        const total = getCategoryQuestions(c.key).length;
+        const rem = getRemainingCount(c.key);
+        return `<div class="deck-stat-row"><span>${c.label}</span><strong>${rem} / ${total}</strong></div>`;
+      }).join('');
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    /* =========================================================================
+       8. TURN FLOW (STEPS 1–5)
+       ========================================================================= */
+    function handleCellClick(coord) {
+      // If All-Out War target selection is active
+      if (aowState.active) {
+        handleAowCellClick(coord);
+        return;
+      }
+
+      const cell = state.board[coord];
+      if (cell.opened) {
+        showToast(`Políčko ${coord} už bylo prozkoumáno.`);
+        return;
+      }
+
+      // STEP 1: Target Lock
+      SoundFX.sonar();
+      lockedCoord = coord;
+      state.lastCoord = coord;
+      saveState();
+      renderBattle();
+
+      // STEP 2: Open Weapon Selector
+      const team = state.teams[state.activeTeam];
+      const cap = team.players[team.captainIndex % team.players.length] || 'Kapitán';
+      document.getElementById('weaponTargetCoord').textContent = coord;
+      document.getElementById('weaponTeamLabel').textContent = team.name;
+      document.getElementById('weaponCaptainLabel').textContent = cap;
+
+      document.getElementById('weaponCountStandard').textContent =
+        `Zbývá: ${getRemainingCount('standard')} / ${getCategoryQuestions('standard').length}`;
+      document.getElementById('weaponCountRapid').textContent =
+        `Zbývá: ${getRemainingCount('rapid')} / ${getCategoryQuestions('rapid').length}`;
+      document.getElementById('weaponCountHeavy').textContent =
+        `Zbývá: ${getRemainingCount('heavy')} / ${getCategoryQuestions('heavy').length}`;
+
+      document.getElementById('modalWeapon').classList.remove('hidden');
+    }
+
+    function selectWeapon(weaponKey) {
+      document.getElementById('modalWeapon').classList.add('hidden');
+      currentWeapon = weaponKey;
+      openQuestionModal(weaponKey, false);
+    }
+
+    function openQuestionModal(weaponKey, isAllOutWar = false, aowTeamIndex = null) {
+      const q = drawRandomQuestion(weaponKey);
+      if (!q) {
+        showToast('V této kategorii nejsou žádné otázky!');
+        return;
+      }
+      currentQuestion = q;
+      const wInfo = WEAPONS[weaponKey];
+      const tIdx = isAllOutWar ? aowTeamIndex : state.activeTeam;
+      const team = state.teams[tIdx];
+
+      document.getElementById('qModalTitle').textContent = isAllOutWar
+        ? `🚨 ALL-OUT WAR SALVA – ${wInfo.label}`
+        : `${wInfo.label} → Cíl ${lockedCoord}`;
+      document.getElementById('qModalTeam').textContent = team.name;
+      document.getElementById('qCatTag').textContent = `${wInfo.label} • ${wInfo.catName} (#${q.id})`;
+      document.getElementById('qText').textContent = q.q;
+
+      const ansBox = document.getElementById('qAnswerBox');
+      ansBox.textContent = `✅ Řešení: ${q.a}`;
+      ansBox.classList.add('hidden');
+      document.getElementById('btnRevealAnswer').textContent = '👁️ Ukázat řešení učiteli';
+
+      // Configure buttons for normal vs All-Out War
+      const btnFire = document.getElementById('btnFireCorrect');
+      const btnWrong = document.getElementById('btnFireWrong');
+
+      if (isAllOutWar) {
+        btnFire.textContent = '✅ BEZ CHYBY – ODPÁLIT VŠECHNY 3 RAKETY!';
+        btnWrong.textContent = '❌ CHYBA – ODPÁLIT JEN 1. RAKETU (2 SELHÁNÍ)';
+        btnFire.onclick = () => resolveAowQuestion(aowTeamIndex, true);
+        btnWrong.onclick = () => resolveAowQuestion(aowTeamIndex, false);
+      } else {
+        btnFire.textContent = '✅ SPRÁVNĚ – PAL! (FIRE!)';
+        btnWrong.textContent = '❌ ŠPATNĚ / ČAS – MISFIRE!';
+        btnFire.onclick = () => resolveShot(true);
+        btnWrong.onclick = () => resolveShot(false);
+      }
+
+      document.getElementById('modalQuestion').classList.remove('hidden');
+      startQuestionTimer(wInfo.time);
+    }
+
+    function startQuestionTimer(seconds) {
+      stopQuestionTimer();
+      qTimeTotal = seconds;
+      qTimeLeft = seconds;
+      qTimerPaused = false;
+      document.getElementById('btnToggleTimer').textContent = '⏸️ Pauza';
+      updateTimerDisplay();
+
+      qTimerInterval = setInterval(() => {
+        if (qTimerPaused) return;
+        qTimeLeft--;
+        updateTimerDisplay();
+        if (qTimeLeft > 0) {
+          SoundFX.tick(qTimeLeft <= 5);
+        } else {
+          stopQuestionTimer();
+          SoundFX.misfire();
+        }
+      }, 1000);
+    }
+
+    function stopQuestionTimer() {
+      if (qTimerInterval) {
+        clearInterval(qTimerInterval);
+        qTimerInterval = null;
+      }
+    }
+
+    function updateTimerDisplay() {
+      const digits = document.getElementById('qTimerDigits');
+      const bar = document.getElementById('qTimerBar');
+      digits.textContent = `${Math.max(0, qTimeLeft)} s`;
+      const pct = Math.max(0, (qTimeLeft / qTimeTotal) * 100);
+      bar.style.width = pct + '%';
+
+      const urgent = qTimeLeft <= 5;
+      digits.classList.toggle('urgent', urgent);
+      bar.classList.toggle('urgent', urgent);
+    }
+
+    function advanceCaptain(teamIndex) {
+      const team = state.teams[teamIndex];
+      if (team.players.length > 0) {
+        team.captainIndex = (team.captainIndex + 1) % team.players.length;
+      }
+    }
+
+    function resolveShot(isCorrect) {
+      stopQuestionTimer();
+      document.getElementById('modalQuestion').classList.add('hidden');
+
+      const tIdx = state.activeTeam;
+      const team = state.teams[tIdx];
+      const coord = lockedCoord;
+      lockedCoord = null;
+
+      if (!isCorrect) {
+        // MISFIRE
+        SoundFX.misfire();
+        team.stats.misfires++;
+        state.lastEventText = `❌ MISFIRE! ${team.name} netrefili odpověď – políčko ${coord} zůstává zavřené.`;
+        advanceCaptain(tIdx);
+        state.activeTeam = 1 - tIdx;
+        saveState();
+        renderBattle();
+        showImpactModal('💨', 'MISFIRE! DĚLO SELHALO!', `${team.name} neodpověděli správně. Políčko ${coord} zůstává zavřené (0 bodů) a na tahu je soupeř.`, '#FF3366');
+        return;
+      }
+
+      // FIRE!
+      SoundFX.cannon();
+      const outcome = executeImpactOnCell(coord, tIdx, currentWeapon, false);
+      saveState();
+      renderBattle();
+
+      showImpactModal(outcome.icon, outcome.title, outcome.desc, outcome.color, () => {
+        if (checkAllShipsSunk()) {
+          openWinningScreen();
+        }
+      });
+    }
+
+    function executeImpactOnCell(coord, teamIndex, weaponKey, isAowSalvo = false) {
+      const cell = state.board[coord];
+      const team = state.teams[teamIndex];
+      const opp = state.teams[1 - teamIndex];
+      const hitBase = WEAPONS[weaponKey].hitPoints;
+
+      // If already opened (possible if both teams targeted same cell in All-Out War)
+      if (cell.opened) {
+        return {
+          icon: '🌊',
+          title: `CÍL ${coord} UŽ BYL ZNIČEN`,
+          desc: `Toto políčko už bylo dříve otevřeno (0 bodů).`,
+          color: '#38BDF8',
+          keepTurn: false
+        };
+      }
+
+      cell.opened = true;
+
+      // 1) SPECIAL EVENT (Points NOT multiplied by Heavy Cannon)
+      if (cell.special) {
+        cell.result = 'special';
+        team.stats.specials++;
+        const ev = SPECIAL_EVENTS.find(e => e.code === cell.special);
+        let desc = ev ? ev.desc : 'Speciální událost!';
+        let color = '#FFD700';
+        let keepTurn = false;
+
+        if (cell.special === 'RADAR') {
+          SoundFX.specialGood();
+          const hiddenShipCells = Object.keys(state.board).filter(k => state.board[k].shipId && !state.board[k].opened);
+          if (hiddenShipCells.length > 0) {
+            const pick = hiddenShipCells[Math.floor(Math.random() * hiddenShipCells.length)];
+            triggerRadarFlash(pick);
+            desc = `📡 RADAR SCAN (${coord}): Pozor na mapu! Na 6 sekund zlatě bliká jedno skryté políčko nepřátelské lodi!`;
+          } else {
+            desc = `📡 RADAR SCAN (${coord}): Všechny lodě jsou již odhaleny!`;
+          }
+        } else if (cell.special === 'DOUBLE') {
+          SoundFX.specialGood();
+          keepTurn = !isAowSalvo;
+          desc = isAowSalvo
+            ? `🚀 DOUBLE TORPEDO (${coord}): Během All-Out War přidává bonus +100 bodů!`
+            : `🚀 DOUBLE TORPEDO (${coord}): ${team.name} zůstávají na tahu a mají okamžitý bonusový tah navíc!`;
+          if (isAowSalvo) team.score += 100;
+        } else if (cell.special === 'PIRATE') {
+          SoundFX.specialGood();
+          opp.score -= 200;
+          team.score += 200;
+          desc = `🏴‍☠️ PIRATE RAID (${coord}): ${team.name} ukradli flotile ${opp.name} rovných 200 bodů!`;
+        } else if (cell.special === 'TREASURE') {
+          SoundFX.specialGood();
+          team.score += 250;
+          desc = `💰 TREASURE CHEST (${coord}): Poklad z hlubin! ${team.name} získávají +250 bodů zdarma!`;
+        } else if (cell.special === 'MINE1' || cell.special === 'MINE2') {
+          SoundFX.specialBad();
+          team.score -= 150;
+          color = '#FF3366';
+          desc = `💣 SEA MINE (${coord}): BUM! Námořní mina ubírá flotile ${team.name} −150 bodů!`;
+        } else if (cell.special === 'BERMUDA') {
+          SoundFX.specialBad();
+          const tmp = team.score;
+          team.score = opp.score;
+          opp.score = tmp;
+          color = '#B967FF';
+          desc = `🌀 BERMUDA TRIANGLE (${coord}): TOTÁLNÍ ZVRAT! Flotily si okamžitě vyměnily celkové skóre!`;
+        }
+
+        state.lastEventText = `${ev.icon} ${ev.name} na ${coord}!`;
+        if (!isAowSalvo) {
+          advanceCaptain(teamIndex);
+          if (!keepTurn) state.activeTeam = 1 - teamIndex;
+        }
+
+        return { icon: ev.icon, title: `${ev.name}!`, desc, color, keepTurn };
+      }
+
+      // 2) SHIP HIT / SUNK
+      if (cell.shipId) {
+        const ship = state.ships.find(s => s.id === cell.shipId);
+        cell.result = 'hit';
+        if (!ship.hits.includes(coord)) ship.hits.push(coord);
+        team.stats.hits++;
+
+        let gained = hitBase;
+        let isSunkNow = false;
+
+        if (ship.hits.length >= ship.size) {
+          ship.sunk = true;
+          isSunkNow = true;
+          team.stats.sunk++;
+          ship.cells.forEach(c => {
+            state.board[c].result = 'sunk';
+          });
+          gained += ship.sinkBonus;
+          SoundFX.explosion();
+          SoundFX.sunkHorn();
+        } else {
+          SoundFX.explosion();
+        }
+
+        team.score += gained;
+        if (!isAowSalvo) {
+          advanceCaptain(teamIndex);
+          state.activeTeam = 1 - teamIndex;
+        }
+
+        if (isSunkNow) {
+          const detail = ship.type === 'submarine'
+            ? `(Ponorka potopena na 1 ránu: +${gained} b. celkem)`
+            : `(+${hitBase} b. zásah + ${ship.sinkBonus} b. bonus za potopení)`;
+          state.lastEventText = `🔥 POTOPENO! ${team.name} potopili ${ship.name} na ${coord} (+${gained} b.)!`;
+          return {
+            icon: '⚓💥',
+            title: `SUNK! ${ship.name.toUpperCase()} POTOPENA!`,
+            desc: `${team.name} získávají +${gained} bodů! ${detail}`,
+            color: '#FFD700',
+            keepTurn: false
+          };
+        } else {
+          state.lastEventText = `💥 ZÁSAH na ${coord}! ${team.name} získávají +${gained} bodů.`;
+          return {
+            icon: '🔥',
+            title: `HIT! ZÁSAH NA ${coord}!`,
+            desc: `${team.name} zasáhli nepřátelskou loď a získávají +${gained} bodů!`,
+            color: '#FF3366',
+            keepTurn: false
+          };
+        }
+      }
+
+      // 3) MISS (EMPTY WATER)
+      cell.result = 'miss';
+      team.stats.misses++;
+      SoundFX.splash();
+      state.lastEventText = `🌊 MISS na ${coord} – jen prázdná voda (0 bodů).`;
+      if (!isAowSalvo) {
+        advanceCaptain(teamIndex);
+        state.activeTeam = 1 - teamIndex;
+      }
+
+      return {
+        icon: '🌊',
+        title: `MISS! (${coord})`,
+        desc: `Šplouchnutí do prázdného oceánu. 0 bodů – na tahu je soupeř.`,
+        color: '#38BDF8',
+        keepTurn: false
+      };
+    }
+
+    function triggerRadarFlash(coord) {
+      radarFlashCoords = [coord];
+      renderBoard();
+      clearTimeout(radarFlashTimeout);
+      radarFlashTimeout = setTimeout(() => {
+        radarFlashCoords = [];
+        renderBoard();
+      }, 6000);
+    }
+
+    function showImpactModal(icon, title, desc, color = '#00FF9D', onClose = null) {
+      document.getElementById('impactIcon').textContent = icon;
+      const tEl = document.getElementById('impactTitle');
+      tEl.textContent = title;
+      tEl.style.color = color;
+      document.getElementById('impactDesc').textContent = desc;
+
+      const modal = document.getElementById('modalImpact');
+      modal.classList.remove('hidden');
+      const btn = document.getElementById('btnCloseImpact');
+      btn.onclick = () => {
+        modal.classList.add('hidden');
+        if (onClose) onClose();
+      };
+    }
+
+    function adjustScore(teamIndex, delta) {
+      state.teams[teamIndex].score += delta;
+      saveState();
+      renderBattle();
+    }
+
+    function checkAllShipsSunk() {
+      return state.ships.length > 0 && state.ships.every(s => s.sunk);
+    }
+
+    /* =========================================================================
+       9. PHASE 4: FINALE "ALL-OUT WAR"
+       ========================================================================= */
+    function startAllOutWar() {
+      if (aowState.active) return;
+      SoundFX.sunkHorn();
+      aowState = {
+        active: true,
+        stage: 'countdown',
+        timer: 30,
+        timerId: null,
+        targetsA: [],
+        targetsB: []
+      };
+      document.getElementById('aowPanel').classList.remove('hidden');
+      renderAowPanel();
+      renderBattle();
+
+      aowState.timerId = setInterval(() => {
+        aowState.timer--;
+        if (aowState.timer > 0) {
+          SoundFX.tick(aowState.timer <= 5);
+        } else {
+          clearInterval(aowState.timerId);
+          aowState.stage = 'pickA';
+          SoundFX.sonar();
+        }
+        renderAowPanel();
+      }, 1000);
+    }
+
+    function renderAowPanel() {
+      const inst = document.getElementById('aowInstruction');
+      const ctrl = document.getElementById('aowControls');
+
+      if (aowState.stage === 'countdown') {
+        inst.textContent = '1. KROK: Obě flotily mají 30 sekund na tajný výběr 3 souřadnic (napište si je na papír!).';
+        ctrl.innerHTML = `
+          <span class="aow-timer-big">${aowState.timer} s</span>
+          <button class="btn btn-gold" onclick="skipAowCountdown()">Přeskočit odpočet → Zadat cíle</button>
+          <button class="btn btn-ghost" onclick="cancelAllOutWar()">✕ Zrušit finále</button>
+        `;
+      } else if (aowState.stage === 'pickA') {
+        inst.innerHTML = `2. KROK: Klikněte na mapě na <strong>3 cíle pro ${escapeHtml(state.teams[0].name)}</strong> (vybráno: ${aowState.targetsA.length}/3 – ${aowState.targetsA.join(', ') || 'žádné'}).`;
+        ctrl.innerHTML = `
+          <button class="btn btn-primary" ${aowState.targetsA.length < 3 ? 'disabled' : ''} onclick="aowNextToPickB()">Potvrdit cíle Flotily A →</button>
+          <button class="btn btn-ghost" onclick="aowState.targetsA=[];renderAowPanel();renderBoard();">Vymazat cíle A</button>
+          <button class="btn btn-ghost" onclick="cancelAllOutWar()">✕ Zrušit</button>
+        `;
+      } else if (aowState.stage === 'pickB') {
+        inst.innerHTML = `3. KROK: Klikněte na mapě na <strong>3 cíle pro ${escapeHtml(state.teams[1].name)}</strong> (vybráno: ${aowState.targetsB.length}/3 – ${aowState.targetsB.join(', ') || 'žádné'}).`;
+        ctrl.innerHTML = `
+          <button class="btn btn-danger" ${aowState.targetsB.length < 3 ? 'disabled' : ''} onclick="aowStartQuestions()">🔥 SPUSTIT FINÁLOVÉ OTÁZKY (HEAVY CANNON)</button>
+          <button class="btn btn-ghost" onclick="aowState.targetsB=[];renderAowPanel();renderBoard();">Vymazat cíle B</button>
+          <button class="btn btn-ghost" onclick="cancelAllOutWar()">✕ Zrušit</button>
+        `;
+      } else if (aowState.stage === 'qA') {
+        inst.innerHTML = `4. KROK: Finálová otázka Heavy Cannon pro <strong>${escapeHtml(state.teams[0].name)}</strong>!`;
+        ctrl.innerHTML = `<button class="btn btn-primary" onclick="openQuestionModal('heavy', true, 0)">💣 Otevřít otázku pro ${escapeHtml(state.teams[0].name)}</button>`;
+      } else if (aowState.stage === 'qB') {
+        inst.innerHTML = `5. KROK: Finálová otázka Heavy Cannon pro <strong>${escapeHtml(state.teams[1].name)}</strong>!`;
+        ctrl.innerHTML = `<button class="btn btn-primary" onclick="openQuestionModal('heavy', true, 1)">💣 Otevřít otázku pro ${escapeHtml(state.teams[1].name)}</button>`;
+      }
+    }
+
+    function skipAowCountdown() {
+      clearInterval(aowState.timerId);
+      aowState.stage = 'pickA';
+      SoundFX.sonar();
+      renderAowPanel();
+    }
+
+    function cancelAllOutWar() {
+      clearInterval(aowState.timerId);
+      aowState.active = false;
+      aowState.stage = 'idle';
+      aowState.targetsA = [];
+      aowState.targetsB = [];
+      document.getElementById('aowPanel').classList.add('hidden');
+      renderBattle();
+    }
+
+    function handleAowCellClick(coord) {
+      if (aowState.stage !== 'pickA' && aowState.stage !== 'pickB') return;
+      if (state.board[coord].opened) {
+        showToast(`Políčko ${coord} už je otevřené – vyberte neotevřenou vodu.`);
+        return;
+      }
+
+      const list = aowState.stage === 'pickA' ? aowState.targetsA : aowState.targetsB;
+      const idx = list.indexOf(coord);
+      if (idx >= 0) {
+        list.splice(idx, 1);
+      } else {
+        if (list.length >= 3) {
+          showToast('Už jsou vybrány 3 cíle. Klikněte na vybrané políčko pro odebrání.');
+          return;
+        }
+        list.push(coord);
+        SoundFX.sonar();
+      }
+      renderAowPanel();
+      renderBoard();
+    }
+
+    function aowNextToPickB() {
+      aowState.stage = 'pickB';
+      SoundFX.sonar();
+      renderAowPanel();
+    }
+
+    function aowStartQuestions() {
+      aowState.stage = 'qA';
+      renderAowPanel();
+      openQuestionModal('heavy', true, 0);
+    }
+
+    function resolveAowQuestion(teamIndex, allCorrect) {
+      stopQuestionTimer();
+      document.getElementById('modalQuestion').classList.add('hidden');
+
+      const targets = teamIndex === 0 ? aowState.targetsA : aowState.targetsB;
+      const team = state.teams[teamIndex];
+      const shotsToFire = allCorrect ? targets.slice(0, 3) : targets.slice(0, 1);
+      const summaryLines = [];
+
+      if (allCorrect) {
+        summaryLines.push(`✅ ${team.name} odpověděli BEZ CHYBY! Odpalují se VŠECHNY 3 rakety:`);
+      } else {
+        summaryLines.push(`❌ ${team.name} udělali chybu! Odpálí se pouze 1. raketa (${targets[0]}), zbylé 2 (${targets[1]}, ${targets[2]}) selhaly!`);
+      }
+
+      // Fire sequentially with short visual delay
+      let step = 0;
+      function fireNextRocket() {
+        if (step >= shotsToFire.length) {
+          saveState();
+          renderBattle();
+          showImpactModal(
+            allCorrect ? '🚀🔥' : '💨🚀',
+            `SALVA ${team.name.toUpperCase()} DOKONČENA!`,
+            summaryLines.join('\n'),
+            allCorrect ? '#00FF9D' : '#FFD700',
+            () => {
+              if (teamIndex === 0) {
+                aowState.stage = 'qB';
+                renderAowPanel();
+                openQuestionModal('heavy', true, 1);
+              } else {
+                // Both salvos finished -> Grand Winning Screen!
+                aowState.active = false;
+                document.getElementById('aowPanel').classList.add('hidden');
+                openWinningScreen();
+              }
+            }
+          );
+          return;
+        }
+
+        const targetCoord = shotsToFire[step];
+        SoundFX.cannon();
+        const res = executeImpactOnCell(targetCoord, teamIndex, 'heavy', true);
+        summaryLines.push(`• Raketa #${step + 1} (${targetCoord}): ${res.icon} ${res.title}`);
+        saveState();
+        renderBattle();
+        step++;
+        setTimeout(fireNextRocket, 750);
+      }
+
+      fireNextRocket();
+    }
+
+    /* =========================================================================
+       10. WINNING SCREEN & CONFETTI
+       ========================================================================= */
+    function openWinningScreen() {
+      state.gameFinished = true;
+      teacherMapVisible = true; // Reveal entire 8x8 map
+      saveState();
+      renderBattle();
+
+      const tA = state.teams[0];
+      const tB = state.teams[1];
+      let title = '';
+      let sub = '';
+
+      if (tA.score > tB.score) {
+        title = `VÍTĚZÍ ${tA.name}!`;
+        sub = `Konečné skóre: ${tA.score} vs. ${tB.score} bodů`;
+      } else if (tB.score > tA.score) {
+        title = `VÍTĚZÍ ${tB.name}!`;
+        sub = `Konečné skóre: ${tB.score} vs. ${tA.score} bodů`;
+      } else {
+        title = `REMÍZA NA MOŘI!`;
+        sub = `Obě flotily skončily se stejným skóre ${tA.score} bodů!`;
+      }
+
+      document.getElementById('winTitle').textContent = title;
+      document.getElementById('winSubtitle').textContent = sub;
+
+      const statsGrid = document.getElementById('winStatsGrid');
+      statsGrid.innerHTML = [tA, tB].map(t => `
+        <div class="win-stat-box">
+          <h3 style="color:var(--sonar-green);margin-bottom:8px;">${escapeHtml(t.name)} — ${t.score} b.</h3>
+          <div>💥 Zásahy (HIT): <strong>${t.stats.hits}</strong></div>
+          <div>⚓ Potopené lodě (SUNK): <strong>${t.stats.sunk}</strong></div>
+          <div>🌊 Vedle (MISS): <strong>${t.stats.misses}</strong></div>
+          <div>💨 Selhání (MISFIRE): <strong>${t.stats.misfires}</strong></div>
+          <div>★ Speciální události: <strong>${t.stats.specials}</strong></div>
+          <div style="margin-top:6px;font-size:0.85rem;color:var(--text-muted);">Posádka: ${t.players.map(escapeHtml).join(', ')}</div>
+        </div>
+      `).join('');
+
+      document.getElementById('modalWin').classList.remove('hidden');
+      SoundFX.fanfare();
+      launchConfetti();
+    }
+
+    function launchConfetti() {
+      const canvas = document.getElementById('confettiCanvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+
+      const colors = ['#00FF9D', '#FFD700', '#FF3366', '#38BDF8', '#B967FF', '#FFFFFF'];
+      const pieces = Array.from({ length: 160 }, () => ({
+        x: Math.random() * canvas.width,
+        y: Math.random() * -canvas.height,
+        w: 7 + Math.random() * 7,
+        h: 10 + Math.random() * 8,
+        color: colors[Math.floor(Math.random() * colors.length)],
+        vy: 2.5 + Math.random() * 4.5,
+        vx: (Math.random() - 0.5) * 3,
+        rot: Math.random() * 360,
+        vrot: (Math.random() - 0.5) * 10
+      }));
+
+      let frames = 0;
+      function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        pieces.forEach(p => {
+          p.y += p.vy;
+          p.x += p.vx;
+          p.rot += p.vrot;
+          ctx.save();
+          ctx.translate(p.x, p.y);
+          ctx.rotate((p.rot * Math.PI) / 180);
+          ctx.fillStyle = p.color;
+          ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+          ctx.restore();
+        });
+        frames++;
+        if (frames < 240) {
+          requestAnimationFrame(animate);
+        } else {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+      }
+      animate();
+    }
+
+    /* =========================================================================
+       11. QUESTION EDITOR
+       ========================================================================= */
+    function openEditor() {
+      renderEditorList();
+      document.getElementById('modalEditor').classList.remove('hidden');
+    }
+
+    function setEditorFilter(cat) {
+      editorFilter = cat;
+      renderEditorList();
+    }
+
+    function renderEditorList() {
+      const list = document.getElementById('editorList');
+      const usedSet = new Set(state.usedQuestionIds);
+      const filtered = editorFilter === 'all'
+        ? state.questions
+        : state.questions.filter(q => q.category === editorFilter);
+
+      list.innerHTML = '';
+      filtered.forEach(q => {
+        const isUsed = usedSet.has(q.id);
+        const item = document.createElement('div');
+        item.className = 'editor-item' + (isUsed ? ' used-q' : '');
+        const catIcon = q.category === 'standard' ? '🔫' : q.category === 'rapid' ? '⚡' : '💣';
+
+        item.innerHTML = `
+          <div>
+            <div style="font-size:0.78rem;color:var(--text-muted);margin-bottom:3px;">
+              ${catIcon} #${q.id} (${q.category.toUpperCase()}) ${isUsed ? '• <span style="color:var(--gold);">POUŽITO</span>' : ''}
+            </div>
+            <div style="font-weight:700;color:#fff;margin-bottom:3px;">${escapeHtml(q.q)}</div>
+            <div style="font-size:0.88rem;color:var(--sonar-green);">→ ${escapeHtml(q.a)}</div>
+          </div>
+          <div style="display:flex;gap:6px;">
+            <button class="btn btn-sm btn-ghost" onclick="editQuestion(${q.id})">✏️</button>
+            <button class="btn btn-sm btn-danger" onclick="deleteQuestion(${q.id})">🗑️</button>
+          </div>
+        `;
+        list.appendChild(item);
+      });
+    }
+
+    function editQuestion(id) {
+      const q = state.questions.find(x => x.id === id);
+      if (!q) return;
+      const newQ = prompt('Upravit znění otázky:', q.q);
+      if (newQ === null || !newQ.trim()) return;
+      const newA = prompt('Upravit správnou odpověď:', q.a);
+      if (newA === null || !newA.trim()) return;
+      q.q = newQ.trim();
+      q.a = newA.trim();
+      saveState();
+      renderEditorList();
+      renderSidebar();
+      showToast(`Otázka #${id} byla upravena.`);
+    }
+
+    function deleteQuestion(id) {
+      if (!confirm(`Opravdu smazat otázku #${id}?`)) return;
+      state.questions = state.questions.filter(q => q.id !== id);
+      state.usedQuestionIds = state.usedQuestionIds.filter(uid => uid !== id);
+      saveState();
+      renderEditorList();
+      renderSidebar();
+    }
+
+    /* =========================================================================
+       12. EVENT LISTENERS & INITIALIZATION
+       ========================================================================= */
+    function bindEvents() {
+      // Sound toggle
+      document.getElementById('btnSound').addEventListener('click', () => {
+        state.soundEnabled = !state.soundEnabled;
+        SoundFX.enabled = state.soundEnabled;
+        if (state.soundEnabled) SoundFX.sonar();
+        saveState();
+        renderAll();
+      });
+
+      // Lobby team name inputs
+      document.getElementById('inputTeamAName').addEventListener('input', (e) => {
+        state.teams[0].name = e.target.value;
+        saveState();
+      });
+      document.getElementById('inputTeamBName').addEventListener('input', (e) => {
+        state.teams[1].name = e.target.value;
+        saveState();
+      });
+
+      // Add/Remove players (2–5)
+      document.getElementById('btnAddPlayerA').addEventListener('click', () => {
+        if (state.teams[0].players.length < 5) {
+          state.teams[0].players.push(`Hráč A${state.teams[0].players.length + 1}`);
+          saveState();
+          renderLobby();
+        }
+      });
+      document.getElementById('btnRemPlayerA').addEventListener('click', () => {
+        if (state.teams[0].players.length > 2) {
+          state.teams[0].players.pop();
+          state.teams[0].captainIndex = 0;
+          saveState();
+          renderLobby();
+        }
+      });
+      document.getElementById('btnAddPlayerB').addEventListener('click', () => {
+        if (state.teams[1].players.length < 5) {
+          state.teams[1].players.push(`Hráč B${state.teams[1].players.length + 1}`);
+          saveState();
+          renderLobby();
+        }
+      });
+      document.getElementById('btnRemPlayerB').addEventListener('click', () => {
+        if (state.teams[1].players.length > 2) {
+          state.teams[1].players.pop();
+          state.teams[1].captainIndex = 0;
+          saveState();
+          renderLobby();
+        }
+      });
+
+      // Fixed specials checkbox
+      document.getElementById('chkFixedSpecials').addEventListener('change', (e) => {
+        state.fixedSpecials = e.target.checked;
+        generateOceanIntoState(state);
+        saveState();
+        showToast('Mapa přegenerována dle zvoleného nastavení speciálních políček.');
+      });
+
+      // Generate ocean button
+      document.getElementById('btnGenOcean').addEventListener('click', () => {
+        SoundFX.sonar();
+        generateOceanIntoState(state);
+        saveState();
+        document.getElementById('lobbyMapStatus').textContent = '✅ Nový oceán vygenerován (11 lodí + 7 událostí, lodě se nedotýkají)';
+        showToast('🎲 Nový tajný oceán 8×8 úspěšně vygenerován!');
+      });
+
+      // Start battle
+      document.getElementById('btnStartBattle').addEventListener('click', () => {
+        SoundFX.sunkHorn();
+        state.teams[0].name = document.getElementById('inputTeamAName').value.trim() || '⚓ The Kraken';
+        state.teams[1].name = document.getElementById('inputTeamBName').value.trim() || '🚢 Iron Fleet';
+        state.phase = 'battle';
+        teacherMapVisible = false;
+        saveState();
+        renderAll();
+      });
+
+      // Top bar actions
+      document.getElementById('btnTeacherMap').addEventListener('click', () => {
+        teacherMapVisible = !teacherMapVisible;
+        renderBattle();
+      });
+
+      document.getElementById('btnAllOutWar').addEventListener('click', startAllOutWar);
+
+      document.getElementById('btnResetBattle').addEventListener('click', () => {
+        if (!confirm('Resetovat aktuální bitvu? (Názvy týmů, posádky a upravené otázky zůstanou zachovány, mapa a skóre se vynulují.)')) return;
+        cancelAllOutWar();
+        state.teams.forEach(t => {
+          t.score = 0;
+          t.captainIndex = 0;
+          t.stats = { hits: 0, misses: 0, misfires: 0, sunk: 0, specials: 0 };
+        });
+        state.activeTeam = 0;
+        state.lastCoord = 'B4';
+        state.lastEventText = 'Bitva resetována! Klikněte na políčko 8×8.';
+        state.gameFinished = false;
+        teacherMapVisible = false;
+        generateOceanIntoState(state);
+        saveState();
+        renderAll();
+        showToast('♻️ Bitva byla resetována a vygenerována nová mapa.');
+      });
+
+      document.getElementById('btnLobby').addEventListener('click', () => {
+        cancelAllOutWar();
+        state.phase = 'lobby';
+        saveState();
+        renderAll();
+      });
+
+      // Weapon cancel
+      document.getElementById('btnCancelWeapon').addEventListener('click', () => {
+        lockedCoord = null;
+        document.getElementById('modalWeapon').classList.add('hidden');
+        renderBoard();
+      });
+
+      // Question modal controls
+      document.getElementById('btnRevealAnswer').addEventListener('click', () => {
+        const box = document.getElementById('qAnswerBox');
+        const hidden = box.classList.toggle('hidden');
+        document.getElementById('btnRevealAnswer').textContent = hidden ? '👁️ Ukázat řešení učiteli' : '🙈 Skrýt řešení';
+      });
+
+      document.getElementById('btnSwapQuestion').addEventListener('click', () => {
+        const cat = aowState.active ? 'heavy' : currentWeapon;
+        const nextQ = drawRandomQuestion(cat, currentQuestion ? currentQuestion.id : null);
+        if (!nextQ) return;
+        currentQuestion = nextQ;
+        const wInfo = WEAPONS[cat];
+        document.getElementById('qCatTag').textContent = `${wInfo.label} • ${wInfo.catName} (#${nextQ.id})`;
+        document.getElementById('qText').textContent = nextQ.q;
+        const ansBox = document.getElementById('qAnswerBox');
+        ansBox.textContent = `✅ Řešení: ${nextQ.a}`;
+        ansBox.classList.add('hidden');
+        document.getElementById('btnRevealAnswer').textContent = '👁️ Ukázat řešení učiteli';
+        startQuestionTimer(wInfo.time);
+        renderSidebar();
+      });
+
+      document.getElementById('btnToggleTimer').addEventListener('click', () => {
+        qTimerPaused = !qTimerPaused;
+        document.getElementById('btnToggleTimer').textContent = qTimerPaused ? '▶️ Pokračovat' : '⏸️ Pauza';
+      });
+
+      // Editor modal
+      document.getElementById('btnEditor').addEventListener('click', openEditor);
+      document.getElementById('btnCloseEditor').addEventListener('click', () => {
+        document.getElementById('modalEditor').classList.add('hidden');
+      });
+
+      document.getElementById('btnEdAdd').addEventListener('click', () => {
+        const cat = document.getElementById('edAddCat').value;
+        const qTxt = document.getElementById('edAddQ').value.trim();
+        const aTxt = document.getElementById('edAddA').value.trim();
+        if (!qTxt || !aTxt) {
+          showToast('Vyplňte prosím otázku i správnou odpověď.');
+          return;
+        }
+        const maxId = state.questions.reduce((m, x) => Math.max(m, x.id), 0);
+        state.questions.push({ id: maxId + 1, category: cat, q: qTxt, a: aTxt });
+        document.getElementById('edAddQ').value = '';
+        document.getElementById('edAddA').value = '';
+        saveState();
+        renderEditorList();
+        renderSidebar();
+        showToast('✅ Nová otázka přidána do databáze!');
+      });
+
+      document.getElementById('btnResetUsedQuestions').addEventListener('click', () => {
+        state.usedQuestionIds = [];
+        state.shuffledPools = { standard: [], rapid: [], heavy: [] };
+        saveState();
+        renderEditorList();
+        renderSidebar();
+        showToast('🔀 Všechny otázky byly vráceny zpět do zásobníku!');
+      });
+
+      document.getElementById('btnRestoreDefaults').addEventListener('click', () => {
+        if (!confirm('Obnovit původní sadu 100 výchozích otázek?')) return;
+        state.questions = JSON.parse(JSON.stringify(DEFAULT_QUESTIONS));
+        state.usedQuestionIds = [];
+        state.shuffledPools = { standard: [], rapid: [], heavy: [] };
+        saveState();
+        renderEditorList();
+        renderSidebar();
+        showToast('♻️ Výchozích 100 otázek bylo obnoveno.');
+      });
+
+      // Winning screen buttons
+      document.getElementById('btnWinViewMap').addEventListener('click', () => {
+        document.getElementById('modalWin').classList.add('hidden');
+        teacherMapVisible = true;
+        renderBattle();
+      });
+
+      document.getElementById('btnWinNewGame').addEventListener('click', () => {
+        document.getElementById('modalWin').classList.add('hidden');
+        state.teams.forEach(t => {
+          t.score = 0;
+          t.captainIndex = 0;
+          t.stats = { hits: 0, misses: 0, misfires: 0, sunk: 0, specials: 0 };
+        });
+        state.activeTeam = 0;
+        state.gameFinished = false;
+        teacherMapVisible = false;
+        generateOceanIntoState(state);
+        state.phase = 'lobby';
+        saveState();
+        renderAll();
+      });
+    }
+
+    // Boot application
+    state = loadState();
+    bindEvents();
+    renderAll();
+  </script>
+</body>
+</html>
